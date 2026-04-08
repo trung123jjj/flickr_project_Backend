@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { logEvents } from "../middleware/logEvents";
 import User from "..models/User.model.js";
 import Session from "../models/Session.model.js";
@@ -8,25 +9,53 @@ dotenv.config();
 
 const ACCESS_TOKEN_TTL = "1800s"; // 900s for production and 1800s for testing
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+=======
+import { logEvents } from '../middleware/logEvents.js'
+import User from '../model/users.model.js'
+import Session from '../model/session.model.js'
+import bcrypt from 'bcrypt'
+import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+import { ref } from 'process'
+import { ReadPreference } from 'mongodb'
+dotenv.config()
+
+const ACCESS_TOKEN_TTL = '1800s' // 900s for production and 1800s for testing
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+>>>>>>> Stashed changes
 
 export const SignUp = async (req, res) => {
   try {
     // deconstruct request
+<<<<<<< Updated upstream
     const { username, password, email } = req.body;
     console.log(username, password, email);
+=======
+    const { username, password, email } = req.body
+    console.log(username, password, email)
+>>>>>>> Stashed changes
 
     // handle missing value on registration
     if (!username || !password) {
       return res
         .status(400)
+<<<<<<< Updated upstream
         .json({ message: "Username and password are required" });
     }
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
+=======
+        .json({ message: 'Username and password are required' })
+    }
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' })
+>>>>>>> Stashed changes
     }
     if (password.length < 8) {
       return res
         .status(400)
+<<<<<<< Updated upstream
         .json({ message: "Password must be at least 8 characters long" });
     }
 
@@ -49,11 +78,34 @@ export const SignUp = async (req, res) => {
     }
     // encrypt the password
     const hashedPassword = await bcrypt.hash(password, 10);
+=======
+        .json({ message: 'Password must be at least 8 characters long' })
+    }
+
+    // check for duplicate usernames in the db
+    const duplicateUser = await User.findOne({ username: username })
+    if (duplicateUser) {
+      logEvents('Failed to register user, username already exists: ' + username)
+
+      return res.status(409).json({ message: 'Username already exists' })
+    }
+
+    const duplicateEmail = await User.findOne({ email: email })
+
+    if (duplicateEmail) {
+      logEvents('Failed to register user, email already exists: ' + email)
+
+      return res.status(410).json({ message: 'Email already exists' })
+    }
+    // encrypt the password
+    const hashedPassword = await bcrypt.hash(password, 10)
+>>>>>>> Stashed changes
 
     // store new user
     await User.create({
       username: username,
       hashedPassword: hashedPassword,
+<<<<<<< Updated upstream
       email: email,
       // displayName: `${firstName} ${lastName}`
     });
@@ -69,15 +121,37 @@ export const SignUp = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+=======
+      email: email
+      // displayName: `${firstName} ${lastName}`
+    })
+
+    // successfully create new user
+    logEvents(`New user registered: ${username}`)
+
+    res.status(201).json({ message: `New user ${username} created` })
+  } catch (error) {
+    // failed to signUp
+    logEvents(`signUp error ${error.message}`, 'errorLog.txt')
+
+    return res.status(500).json({ message: error.message })
+  }
+}
+>>>>>>> Stashed changes
 
 export const signIn = async (req, res) => {
   try {
     // deconstruct
+<<<<<<< Updated upstream
     const { username, password } = req.body;
+=======
+    const { username, password } = req.body
+>>>>>>> Stashed changes
 
     if (!username || !password) {
       return res
         .status(400)
+<<<<<<< Updated upstream
         .json({ message: "Username and password are required" });
     }
 
@@ -101,6 +175,29 @@ export const signIn = async (req, res) => {
 
       // return 'Username or password incorrect' so that others can not know which is incorrect
       res.status(401).json({ message: "Username or password incorrect" });
+=======
+        .json({ message: 'Username and password are required' })
+    }
+
+    const foundUser = await User.findOne({ username: username })
+    if (!foundUser) {
+      // username not found
+      logEvents(`Login failed: Username or password incorrect`)
+
+      // return 'Username or password incorrect' so that others can not know which is incorrect
+      return res.status(401).json({ message: `Username or password incorrect` })
+    }
+
+    // check password
+    const match = await bcrypt.compare(password, foundUser.hashedPassword)
+
+    if (!match) {
+      // incorrect password
+      logEvents(`User ${username} failed to log in!`)
+
+      // return 'Username or password incorrect' so that others can not know which is incorrect
+      res.status(401).json({ message: 'Username or password incorrect' })
+>>>>>>> Stashed changes
     }
 
     // create accessToken with JWTs
@@ -109,6 +206,7 @@ export const signIn = async (req, res) => {
         // payload
         userId: foundUser._id,
         username: foundUser.username,
+<<<<<<< Updated upstream
         role: foundUser.role,
       },
       process.env.ACCESS_TOKEN_SECRET,
@@ -117,11 +215,22 @@ export const signIn = async (req, res) => {
 
     // create refreshToken
     const refreshToken = crypto.randomBytes(64).toString("hex");
+=======
+        role: foundUser.role
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: ACCESS_TOKEN_TTL }
+    )
+
+    // create refreshToken
+    const refreshToken = crypto.randomBytes(64).toString('hex')
+>>>>>>> Stashed changes
 
     // create session to store refresh token
     await Session.create({
       userId: foundUser._id,
       refreshToken,
+<<<<<<< Updated upstream
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
     });
 
@@ -135,10 +244,26 @@ export const signIn = async (req, res) => {
       sameSite: "none", // backend, frontend on different domain
       maxAge: REFRESH_TOKEN_TTL,
     });
+=======
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL)
+    })
+
+    // successful login
+    logEvents(`User ${username} logged in successfully!`)
+
+    // send refreshToken in cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      // secure: true,
+      sameSite: 'none', // backend, frontend on different domain
+      maxAge: REFRESH_TOKEN_TTL
+    })
+>>>>>>> Stashed changes
 
     // send refreshToken in respond
     return res.status(200).json({
       message: `User ${foundUser.displayName} logged in!`,
+<<<<<<< Updated upstream
       accessToken,
     });
   } catch (error) {
@@ -147,16 +272,32 @@ export const signIn = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+=======
+      accessToken
+    })
+  } catch (error) {
+    // failed to signIn
+    logEvents(`signIn error ${error.message}`, 'errorLog.txt')
+    return res.status(500).json({ message: error.message })
+  }
+}
+>>>>>>> Stashed changes
 
 export const signOut = async (req, res) => {
   try {
     // get refreshToken from cookie
+<<<<<<< Updated upstream
     const token = req.cookies?.refreshToken;
     console.log(token);
+=======
+    const token = req.cookies?.refreshToken
+    console.log(token)
+>>>>>>> Stashed changes
 
     // res.status(200)
     if (token) {
       // delete refreshToken from Session
+<<<<<<< Updated upstream
       await Session.deleteOne({ refreshToken: token });
 
       // delete cookie
@@ -170,3 +311,18 @@ export const signOut = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+=======
+      await Session.deleteOne({ refreshToken: token })
+
+      // delete cookie
+      logEvents(`User Logged out`)
+      res.clearCookie('refreshToken')
+    }
+    return res.status(204)
+  } catch (error) {
+    // failed to signOut
+    logEvents(`signOut error ${error.message}`, 'errorLog.txt')
+    return res.status(500).json({ message: error.message })
+  }
+}
+>>>>>>> Stashed changes

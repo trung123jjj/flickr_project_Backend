@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    avatar_url: {
+      type: String,
+      default: "https://static.thenounproject.com/png/anonymous-avatar-icon-2631891-512.png",
+    }
   },
   { timestamps: true },
 );

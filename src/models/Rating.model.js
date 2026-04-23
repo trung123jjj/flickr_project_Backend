@@ -8,18 +8,8 @@ const ratingSchema = new mongoose.Schema(
             required: true,
         },
 
-        username: {
-            type: String,
-            required: true,
-        },
-
         movieId: {
             type: Number,
-            required: true,
-        },
-
-        movieTitle: {
-            type: String,
             required: true,
         },
 
@@ -34,20 +24,11 @@ const ratingSchema = new mongoose.Schema(
             max: 5,
         },
 
-        review: {
-            type: String,
-        },
+        updatedAt: {
+            type: Date,
+            default: Date.now,
+        }
 
-        watchStatus: {
-            type: String,
-            enum: ['Watched', 'Watching', 'Want to Watch'],
-            default: 'watched',
-        },
-
-        isFavorite: {
-            type: Boolean,
-            default: false,
-        },
     },
     { timestamps: true }
 );

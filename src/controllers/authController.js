@@ -2,7 +2,7 @@ const { logEvents } = require("../middleware/logEvents");
 const User = require("../models/User.model.js");
 const Session = require("../models/Session.model.js");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 require("dotenv").config();
 

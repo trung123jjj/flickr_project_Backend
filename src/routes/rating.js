@@ -1,12 +1,12 @@
-import ratingController from "../controllers/ratingController"; 
-import express from 'express'
-
-const router = express.Router()
+const ratingController = require("../controllers/ratingController");
+const express = require('express');
+const { validateRating } = require('../middleware/validate');
+const router = express.Router();
 
 router
-    .post('/add', ratingController.addRating)
-    .get('/get', ratingController.getRating)
+    .post('/add', validateRating, ratingController.createRating)
+    .get('/get', ratingController.getAllRatings)
     .delete('/delete', ratingController.deleteRating)
-    .put('/update', ratingController.updateRating)
+    .put('/update', ratingController.updateRating);
 
-export default router
+module.exports = router;

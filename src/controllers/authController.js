@@ -1,15 +1,15 @@
-import { logEvents } from "../middleware/logEvents";
-import User from "..models/User.model.js";
-import Session from "../models/Session.model.js";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-dotenv.config();
+const { logEvents } = require("../middleware/logEvents");
+const User = require("../models/User.model.js");
+const Session = require("../models/Session.model.js");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+require("dotenv").config();
 
 const ACCESS_TOKEN_TTL = "1800s"; // 900s for production and 1800s for testing
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
-export const SignUp = async (req, res) => {
+const SignUp = async (req, res) => {
   try {
     // deconstruct request
     const { username, password, email } = req.body;
@@ -45,7 +45,7 @@ export const SignUp = async (req, res) => {
     if (duplicateEmail) {
       logEvents("Failed to register user, email already exists: " + email);
 
-      return res.status(410).json({ message: "Email already exists" });
+      return res.status(409).json({ message: "Email already exists" });
     }
     // encrypt the password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -70,7 +70,7 @@ export const SignUp = async (req, res) => {
   }
 };
 
-export const signIn = async (req, res) => {
+const signIn = async (req, res) => {
   try {
     // deconstruct
     const { username, password } = req.body;
@@ -100,7 +100,7 @@ export const signIn = async (req, res) => {
       logEvents(`User ${username} failed to log in!`);
 
       // return 'Username or password incorrect' so that others can not know which is incorrect
-      res.status(401).json({ message: "Username or password incorrect" });
+      return res.status(401).json({ message: "Username or password incorrect" });
     }
 
     // create accessToken with JWTs
@@ -131,8 +131,8 @@ export const signIn = async (req, res) => {
     // send refreshToken in cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      // secure: true,
-      sameSite: "none", // backend, frontend on different domain
+      secure: true,
+      sameSite: "none",
       maxAge: REFRESH_TOKEN_TTL,
     });
 
@@ -148,7 +148,7 @@ export const signIn = async (req, res) => {
   }
 };
 
-export const signOut = async (req, res) => {
+const signOut = async (req, res) => {
   try {
     // get refreshToken from cookie
     const token = req.cookies?.refreshToken;
@@ -170,3 +170,5 @@ export const signOut = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+module.exports = { SignUp, signIn, signOut };

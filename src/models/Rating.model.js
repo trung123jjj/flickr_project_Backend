@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const ratingSchema = new mongoose.Schema(
     {
@@ -23,16 +23,11 @@ const ratingSchema = new mongoose.Schema(
             min: 0,
             max: 5,
         },
-
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        }
-
+        
     },
     { timestamps: true }
 );
 
 ratingSchema.index({ userId: 1, movieId: 1 }, { unique: true });
 
-export default mongoose.model('Rating', ratingSchema);
+module.exports = mongoose.model('Rating', ratingSchema);

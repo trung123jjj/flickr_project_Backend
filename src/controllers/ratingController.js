@@ -1,13 +1,14 @@
-import Rating from '../models/Rating.model.js';
-import { logEvents } from '../middleware/logEvents.js';
+const Rating = require('../models/Rating.model.js');
+const { logEvents } = require('../middleware/logEvents');
 
 const getAllRatings = async (req, res) => {
     try {
         const ratings = await Rating.find({ userId: req.user._id });
-        res.json(ratings);
         logEvents(`User ${req.user._id} fetched all ratings`);
+        res.json(ratings);
     } catch (error) {
         console.error('Error fetching ratings:', error);
+        logEvents(`Error fetching ratings: ${error.message}`, 'errorLog.txt');
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -22,10 +23,11 @@ const getRatingById = async (req, res) => {
             return res.status(404).json({ message: 'Rating not found' });
         }
 
-        res.json(rating);
         logEvents(`User ${req.user._id} fetched rating with id ${id}`);
+        res.json(rating);
     } catch (error) {
         console.error('Error fetching rating:', error);
+        logEvents(`Error fetching rating: ${error.message}`, 'errorLog.txt');
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -45,8 +47,8 @@ const createRating = async (req, res) => {
         };
 
         const rating = await Rating.create(ratingData);
-        res.status(201).json(rating);
         logEvents(`User ${req.user._id} created a new rating with id ${rating._id}`);
+        res.status(201).json(rating);
     } catch (error) {
         console.error('Error creating rating:', error);
 
@@ -54,6 +56,7 @@ const createRating = async (req, res) => {
             return res.status(409).json({ message: 'You already rated this movie' });
         }
 
+        logEvents(`Error creating rating: ${error.message}`, 'errorLog.txt');
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -76,10 +79,11 @@ const updateRating = async (req, res) => {
         });
 
         await rating.save();
-        res.json(rating);
         logEvents(`User ${req.user._id} updated rating with id ${id}`);
+        res.json(rating);
     } catch (error) {
         console.error('Error updating rating:', error);
+        logEvents(`Error updating rating: ${error.message}`, 'errorLog.txt');
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -94,15 +98,16 @@ const deleteRating = async (req, res) => {
             return res.status(404).json({ message: 'Rating not found' });
         }
 
-        res.json({ message: 'Rating deleted successfully' });
         logEvents(`User ${req.user._id} deleted rating with id ${id}`);
+        res.json({ message: 'Rating deleted successfully' });
     } catch (error) {
         console.error('Error deleting rating:', error);
+        logEvents(`Error deleting rating: ${error.message}`, 'errorLog.txt');
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-export default {
+module.exports = {
     getAllRatings,
     getRatingById,
     createRating,

@@ -1,21 +1,21 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const sessionSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      require: true,
+      required: true,
       index: true,
     },
     refreshToken: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     expiresAt: {
       type: Date,
-      require: true,
+      required: true,
     },
   },
   {
@@ -23,7 +23,6 @@ const sessionSchema = new mongoose.Schema(
   },
 );
 
-// automatically delete after expired
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default mongoose.model("Session", sessionSchema);
+module.exports = mongoose.model("Session", sessionSchema);

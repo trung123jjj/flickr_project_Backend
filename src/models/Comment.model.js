@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema(
     {
@@ -8,28 +8,24 @@ const commentSchema = new mongoose.Schema(
             required: true
         },
         movieId: {
-            type: Number, // ID từ TMDB
+            type: Number,
             required: true,
         },
         content: {
             type: String,
             maxlength: 500,
-            // Logic: Bắt buộc có chữ NẾU không có ảnh. 
-            // Nếu có ảnh rồi thì chữ có thể trống.
             required: function() {
-                return !this.imageUrl; 
+                return !this.imageUrl;
             }
         },
         imageUrl: {
-            type: String, // Lưu đường dẫn ảnh (từ Cloudinary, S3, Firebase...)
+            type: String,
             default: null
         }
     },
     {
-        // Tự động tạo createdAt và updatedAt
         timestamps: true
     }
 );
 
-const Comment = mongoose.model("Comment", commentSchema);
-export default Comment;
+module.exports = mongoose.model("Comment", commentSchema);

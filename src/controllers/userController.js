@@ -1,7 +1,7 @@
-import User from "../models/User.model.js";
-import { logEvents } from "../middleware/logEvents.js";
+const User = require("../models/User.model.js");
+const { logEvents } = require("../middleware/logEvents");
 
-export const getUserProfile = async (req, res) => {
+const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
     logEvents(`User ${req.user._id} accessed their profile`);
@@ -12,7 +12,7 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-export const createNewUser = async (req, res) => {
+const createNewUser = async (req, res) => {
   try {
     const user = await User.create(req.body).select("-hashedpassword");
     res.status(200).json(user);
@@ -23,20 +23,19 @@ export const createNewUser = async (req, res) => {
   }
 };
 
-export const updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
   try {
     const user = await User.findOne({ username: `${req.body.username}` });
 
     if (!user) {
-      return res.status(404).json({ message: "User không tồn tại" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     await user.updateOne({
       username: `${req.body.username ? req.body.username : user.username}`,
-      password: `${req.body.password ? req.body.password : user.password}`,
+      hashedPassword: `${req.body.hashedPassword ? req.body.hashedPassword : user.hashedPassword}`,
     });
 
-    // wait for user to updated then respond
     const updatedUser = await User.findOne({
       username: `${req.body.username}`,
     }).select("-hashedPassword");
@@ -45,11 +44,11 @@ export const updateUser = async (req, res) => {
 
     logEvents(`User with id ${req.body.id} has been updated`);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-export const deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const user = await User.deleteOne({ username: `${req.body.username}` });
 
@@ -73,7 +72,7 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-hashedPassword");
     logEvents(`All users have been retrieved`);
@@ -84,21 +83,22 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-export const getUser = async (req, res) => {
+const getUser = async (req, res) => {
   try {
-    // find the user info exclude hashedPassword
     const user = await User.findOne({
-      username: `${req.params.username}`,
+      username: `${req.body.username}`,
     }).select("-hashedPassword");
 
     if (!user) {
-      return res.status(404).json({ message: "User không tồn tại" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.json(user);
 
-    logEvents(`return user with username: ${req.params.username}`);
+    logEvents(`return user with username: ${req.body.username}`);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+module.exports = { getUserProfile, createNewUser, updateUser, deleteUser, getAllUsers, getUser };

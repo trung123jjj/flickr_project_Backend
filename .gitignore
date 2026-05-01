@@ -1,3 +1,8 @@
 node_modules/
 .env
 ISSUES.md
+
+# Log files
+*.log
+*.txt
+logs/

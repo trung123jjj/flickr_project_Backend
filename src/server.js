@@ -5,9 +5,12 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
+const { connectDB } = require("./libs/db");
+
 require("dotenv").config();
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -42,12 +45,10 @@ app.get("/", (req, res) => {
 
 app.use(errorHandler);
 
-mongoose
-  .connect(process.env.MONGO_URI)
+connectDB()
   .then(() => {
-    console.log("Đã kết nối MongoDB Atlas");
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server đang chạy tại port ${process.env.PORT || 5000}`);
+    app.listen(process.env.PORT || 8080, () => {
+      console.log(`Server đang chạy tại port ${process.env.PORT || 8080}`);
     });
   })
   .catch((err) => console.log("Lỗi kết nối:", err));

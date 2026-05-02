@@ -37,10 +37,10 @@ const createRating = async (req, res) => {
         const ratingData = {
             userId: req.user._id,
             username: req.user.username || req.user.name || 'Unknown',
-            movieId: req.body.movieId,
+            movieId: Number(req.body.movieId),
             movieTitle: req.body.movieTitle,
             moviePoster: req.body.moviePoster,
-            score: req.body.score,
+            score: Number(req.body.score),
             review: req.body.review,
             watchStatus: req.body.watchStatus,
             isFavorite: req.body.isFavorite,
@@ -114,12 +114,12 @@ const getMovieRating = async (req, res) => {
 
         const stats = await Rating.aggregate([
             { $match: { movieId: numericMovieId } },
-            { 
-                $group: { 
-                    _id: null, 
-                    averageScore: { $avg: "$score" }, 
-                    totalRatings: { $sum: 1 } 
-                } 
+            {
+                $group: {
+                    _id: null,
+                    averageScore: { $avg: "$score" },
+                    totalRatings: { $sum: 1 }
+                }
             }
         ]);
 
@@ -128,9 +128,9 @@ const getMovieRating = async (req, res) => {
 
         let userScore = null;
         if (req.user) {
-            const userRating = await Rating.findOne({ 
-                userId: req.user._id, 
-                movieId: numericMovieId 
+            const userRating = await Rating.findOne({
+                userId: req.user._id,
+                movieId: numericMovieId
             });
             userScore = userRating ? userRating.score : null;
         }
@@ -176,9 +176,9 @@ const getUserRating = async (req, res) => {
         const { movieId } = req.params;
         const numericMovieId = Number(movieId);
 
-        const rating = await Rating.findOne({ 
-            userId: req.user._id, 
-            movieId: numericMovieId 
+        const rating = await Rating.findOne({
+            userId: req.user._id,
+            movieId: numericMovieId
         });
 
         res.json(rating ? { score: rating.score } : null);

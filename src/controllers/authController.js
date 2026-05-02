@@ -20,6 +20,7 @@ const SignUp = async (req, res) => {
         .status(400)
         .json({ message: "Username and password are required" });
     }
+
     if (password.length < 8) {
       return res
         .status(400)

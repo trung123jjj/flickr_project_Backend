@@ -189,6 +189,49 @@ const getUserRating = async (req, res) => {
     }
 };
 
+const getBatchMovieRatings = async (req, res) => {
+    try {
+        const { movieIds } = req.body;
+
+        if (!Array.isArray(movieIds) || movieIds.length === 0) {
+            return res.status(400).json({ message: 'movieIds must be a non-empty array' });
+        }
+
+        const numericMovieIds = movieIds.map(id => Number(id));
+
+        const stats = await Rating.aggregate([
+            { $match: { movieId: { $in: numericMovieIds } } },
+            {
+                $group: {
+                    _id: "$movieId",
+                    averageScore: { $avg: "$score" },
+                    totalRatings: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const result = {};
+        stats.forEach(stat => {
+            result[stat._id] = {
+                averageScore: parseFloat(stat.averageScore.toFixed(1)),
+                totalRatings: stat.totalRatings
+            };
+        });
+
+        numericMovieIds.forEach(id => {
+            if (!result[id]) {
+                result[id] = { averageScore: 0, totalRatings: 0 };
+            }
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching batch movie ratings:', error);
+        logEvents(`Error fetching batch movie ratings: ${error.message}`, 'errorLog.txt');
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 module.exports = {
     getAllRatings,
     getRatingById,
@@ -198,4 +241,5 @@ module.exports = {
     getMovieRating,
     rateMovie,
     getUserRating,
+    getBatchMovieRatings,
 };

@@ -7,6 +7,7 @@ router
     .post('/add', validateRating, ratingController.createRating)
     .get('/get', ratingController.getAllRatings)
     .delete('/delete', ratingController.deleteRating)
-    .put('/update', ratingController.updateRating);
+    .put('/update', ratingController.updateRating)
+    .post('/batch', ratingController.getBatchMovieRatings);
 
 module.exports = router;

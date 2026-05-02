@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
-import { logEvents } from '../middleware/logEvents.js'
+const mongoose = require('mongoose')
+const { logEvents } = require('../middleware/logEvents')
 
-export const connectDB = async () => {
+const connectDB = async () => {
   try {
     console.log('Connecting to Database...')
 
@@ -14,3 +14,5 @@ export const connectDB = async () => {
     process.exit(1)
   }
 }
+
+module.exports = { connectDB }

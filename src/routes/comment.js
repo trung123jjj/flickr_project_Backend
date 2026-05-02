@@ -4,6 +4,8 @@ const verifyJWT = require('../middleware/verifyJWT');
 const { validateComment } = require('../middleware/validate');
 const router = express.Router();
 
+router.get('/', commentController.getAllComments);
+
 router.get('/:movieId', commentController.getCommentsByMovie);
 
 router.post('/', verifyJWT, validateComment, commentController.createComment);

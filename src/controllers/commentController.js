@@ -2,6 +2,19 @@ const Comment = require("../models/Comment.model.js");
 require("../models/User.model.js"); // Đảm bảo User model được đăng ký cho populate
 const { logEvents } = require("../middleware/logEvents");
 
+const getAllComments = async (req, res) => {
+  try {
+    const comments = await Comment.find()
+      .populate("userId", "username avatar_url")
+      .sort({ createdAt: -1 });
+    res.json(comments);
+    logEvents(`Fetched all ${comments.length} comments`);
+  } catch (error) {
+    logEvents(`Error fetching all comments: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 const getCommentsByMovie = async (req, res) => {
   try {
     const { movieId } = req.params;
@@ -67,4 +80,4 @@ const deleteComment = async (req, res) => {
   }
 };
 
-module.exports = { getCommentsByMovie, createComment, deleteComment };
+module.exports = { getAllComments, getCommentsByMovie, createComment, deleteComment };

@@ -48,7 +48,7 @@ app.use(generalLimiter);
 
 // 🔥 Routes
 app.use("/api/auth", authLimiter, require("./routes/auth"));
-app.use("/api/rating", require("./routes/ratingRoutes"));
+app.use("/api/rating", require("./routes/rating"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/comments", require("./routes/comment"));
 

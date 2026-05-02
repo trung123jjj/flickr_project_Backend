@@ -12,17 +12,13 @@ const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 const SignUp = async (req, res) => {
   try {
     // deconstruct request
-    const { username, password, email } = req.body;
-    console.log(username, password, email);
+    const { username, password } = req.body;
 
     // handle missing value on registration
     if (!username || !password) {
       return res
         .status(400)
         .json({ message: "Username and password are required" });
-    }
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
     }
     if (password.length < 8) {
       return res
@@ -40,13 +36,6 @@ const SignUp = async (req, res) => {
       return res.status(409).json({ message: "Username already exists" });
     }
 
-    const duplicateEmail = await User.findOne({ email: email });
-
-    if (duplicateEmail) {
-      logEvents("Failed to register user, email already exists: " + email);
-
-      return res.status(409).json({ message: "Email already exists" });
-    }
     // encrypt the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -54,8 +43,6 @@ const SignUp = async (req, res) => {
     await User.create({
       username: username,
       hashedPassword: hashedPassword,
-      email: email,
-      // displayName: `${firstName} ${lastName}`
     });
 
     // successfully create new user

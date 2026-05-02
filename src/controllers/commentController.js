@@ -14,7 +14,7 @@ const getCommentsByMovie = async (req, res) => {
       .sort({ createdAt: -1 });
 
     console.log(`Found ${comments.length} comments`);
-    res.json(comments);
+    res.json({ success: true, data: comments });
     logEvents(`Fetched ${comments.length} comments for movie ${movieIdNum}`);
   } catch (error) {
     logEvents(`Error fetching comments: ${error.message}`, "errorLog.txt");

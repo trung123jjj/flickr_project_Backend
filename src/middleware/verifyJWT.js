@@ -11,9 +11,11 @@ const verifyJWT = (req, res, next) => {
     if (!token) return res.status(401).json({ message: "Token not found" });
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
-      if (err) 
+      if (err) {
+        // Token expired or invalid
         return res.status(403).json({ message: "accessToken expired or invalid" });
-      
+      }
+
       // decoded contains userId, username, role from JWT payload
       if (!decoded.userId) {
         return res.status(403).json({ message: "Invalid token payload" });

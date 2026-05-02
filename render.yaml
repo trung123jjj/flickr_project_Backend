@@ -2,8 +2,10 @@ services:
   - type: web
     name: flickr-backend
     env: node
+    plan: starter
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node src/server.js
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,4 +16,6 @@ services:
       - key: REFRESH_TOKEN_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        sync: false
+        value: "*"
+      - key: PORT
+        value: 8080

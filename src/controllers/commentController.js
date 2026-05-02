@@ -1,4 +1,5 @@
 const Comment = require("../models/Comment.model.js");
+require("../models/User.model.js"); // Đảm bảo User model được đăng ký cho populate
 const { logEvents } = require("../middleware/logEvents");
 
 const getCommentsByMovie = async (req, res) => {

@@ -7,7 +7,7 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const { connectDB } = require("./libs/db");
 
-require("dotenv").config();np
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;

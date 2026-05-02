@@ -4,13 +4,14 @@ const { logEvents } = require("../middleware/logEvents");
 const getCommentsByMovie = async (req, res) => {
   try {
     const { movieId } = req.params;
+    const movieIdNum = parseInt(movieId); // Chuyển sang number
 
-    const comments = await Comment.find({ movieId })
+    const comments = await Comment.find({ movieId: movieIdNum })
       .populate("userId", "username avatar_url")
       .sort({ createdAt: -1 });
 
     res.json(comments);
-    logEvents(`Fetched ${comments.length} comments for movie ${movieId}`);
+    logEvents(`Fetched ${comments.length} comments for movie ${movieIdNum}`);
   } catch (error) {
     logEvents(`Error fetching comments: ${error.message}`, "errorLog.txt");
     res.status(500).json({ message: "Server error", error: error.message });

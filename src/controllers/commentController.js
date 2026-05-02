@@ -6,10 +6,13 @@ const getCommentsByMovie = async (req, res) => {
     const { movieId } = req.params;
     const movieIdNum = parseInt(movieId); // Chuyển sang number
 
+    console.log('Fetching comments for movieId:', movieIdNum); // Debug log
+
     const comments = await Comment.find({ movieId: movieIdNum })
       .populate("userId", "username avatar_url")
       .sort({ createdAt: -1 });
 
+    console.log(`Found ${comments.length} comments`);
     res.json(comments);
     logEvents(`Fetched ${comments.length} comments for movie ${movieIdNum}`);
   } catch (error) {

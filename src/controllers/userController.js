@@ -1,5 +1,6 @@
 const User = require("../models/User.model.js");
 const { logEvents } = require("../middleware/logEvents");
+const path = require("path");
 
 const getUserProfile = async (req, res) => {
   try {
@@ -25,24 +26,27 @@ const createNewUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const user = await User.findOne({ username: `${req.body.username}` });
+    const username = req.params.username;
+    const user = await User.findOne({ username });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await user.updateOne({
-      username: `${req.body.username ? req.body.username : user.username}`,
-      hashedPassword: `${req.body.hashedPassword ? req.body.hashedPassword : user.hashedPassword}`,
-    });
+    const updateData = {};
+    if (req.body.username) updateData.username = req.body.username;
+    if (req.body.hashedPassword) updateData.hashedPassword = req.body.hashedPassword;
+    if (req.body.avatar_url) updateData.avatar_url = req.body.avatar_url;
+
+    await user.updateOne(updateData);
 
     const updatedUser = await User.findOne({
-      username: `${req.body.username}`,
+      username: updateData.username || username,
     }).select("-hashedPassword");
 
     res.json(updatedUser);
 
-    logEvents(`User with id ${req.body.id} has been updated`);
+    logEvents(`User ${user._id} has been updated`);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -101,4 +105,34 @@ const getUser = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, createNewUser, updateUser, deleteUser, getAllUsers, getUser };
+const updateAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Vui lòng chọn file ảnh" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User không tồn tại" });
+    }
+
+    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+    
+    user.avatar_url = avatarUrl;
+    await user.save();
+
+    const updatedUser = await User.findById(req.user._id).select("-hashedPassword");
+    
+    res.json({
+      message: "Cập nhật avatar thành công",
+      user: updatedUser
+    });
+
+    logEvents(`User ${req.user._id} updated avatar`);
+  } catch (error) {
+    logEvents(`Error updating avatar: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = { getUserProfile, createNewUser, updateUser, deleteUser, getAllUsers, getUser, updateAvatar };

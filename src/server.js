@@ -45,6 +45,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(logger);
 app.use(generalLimiter);
+app.use('/uploads', express.static('uploads'));
 
 // 🔥 Routes
 app.use("/api/auth", authLimiter, require("./routes/auth"));

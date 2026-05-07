@@ -47,9 +47,9 @@ const createComment = async (req, res) => {
       imageUrl,
     });
 
-    // Populate userId to return username
+    // Populate userId to return username and avatar
     const populatedComment = await Comment.findById(comment._id)
-      .populate("userId", "username");
+      .populate("userId", "username avatar_url");
 
     res.status(201).json(populatedComment);
     logEvents(`User ${req.user._id} created comment for movie ${movieId}`);

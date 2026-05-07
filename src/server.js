@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
+const path = require("path");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const { connectDB } = require("./libs/db");
@@ -45,7 +46,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(logger);
 app.use(generalLimiter);
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // 🔥 Routes
 app.use("/api/auth", authLimiter, require("./routes/auth"));

@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-const mongoSanitize = require("express-mongo-sanitize");
+// const mongoSanitize = require("express-mongo-sanitize");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
@@ -14,6 +14,16 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+app.use((req, res, next) => {
+  console.log(`[DEBUG] Request: ${req.method} ${req.url}`);
+  next();
+});
+
+app.use(logger);
+
+// Fix Express 5 query getter issue
+app.set('query parser', 'simple');
 
 // 🔥 QUAN TRỌNG: fix rate limit khi deploy (Render dùng proxy)
 app.set("trust proxy", 1);
@@ -46,21 +56,18 @@ if (corsOrigin && corsOrigin !== '*') {
 app.use(cors(corsConfig));
 
 // Security headers
-app.use(helmet());
+// app.use(helmet());
 
 // 🔥 Middleware
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 // Prevent NoSQL injection
-app.use(mongoSanitize());
-
-app.use(logger);
-app.use(generalLimiter);
+// app.use(generalLimiter);
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // 🔥 Routes
-app.use("/api/auth", authLimiter, require("./routes/auth"));
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/ratings", require("./routes/rating"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/comments", require("./routes/comment"));

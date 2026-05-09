@@ -15,8 +15,11 @@ const getUserProfile = async (req, res) => {
 
 const createNewUser = async (req, res) => {
   try {
-    const user = await User.create(req.body).select("-hashedpassword");
-    res.status(200).json(user);
+    const user = await User.create(req.body);
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.hashedPassword;
+
+    res.status(200).json(userWithoutPassword);
     logEvents(`New user created: _id: ${user._id}, username: ${user.username}`);
   } catch (error) {
     logEvents(`Error creating new user: ${error.message}`, "errorLog.txt");
@@ -54,21 +57,22 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.deleteOne({ username: `${req.body.username}` });
+    const username = req.params.username;
+    const result = await User.deleteOne({ username: username });
 
-    if (!user.deletedCount) {
+    if (!result.deletedCount) {
       logEvents(
-        `User with id ${req.body.username} not found for deletion`,
+        `User with username ${username} not found for deletion`,
         "errorLog.txt",
       );
       return res
         .status(404)
-        .json({ message: `User with id ${req.body.username} not found` });
+        .json({ message: `User with username ${username} not found` });
     }
 
-    logEvents(`User with id ${req.body.username} has been deleted`);
+    logEvents(`User with username ${username} has been deleted`);
     return res.json({
-      message: `User with id ${req.body.username} deleted successfully`,
+      message: `User with username ${username} deleted successfully`,
     });
   } catch (error) {
     logEvents(`Error deleting user: ${error.message}`, "errorLog.txt");
@@ -89,8 +93,9 @@ const getAllUsers = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
+    const username = req.params.username;
     const user = await User.findOne({
-      username: `${req.body.username}`,
+      username: username,
     }).select("-hashedPassword");
 
     if (!user) {
@@ -99,7 +104,7 @@ const getUser = async (req, res) => {
 
     res.json(user);
 
-    logEvents(`return user with username: ${req.body.username}`);
+    logEvents(`return user with username: ${username}`);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

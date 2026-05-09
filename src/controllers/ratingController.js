@@ -149,6 +149,10 @@ const rateMovie = async (req, res) => {
         const numericMovieId = Number(movieId);
         const numericScore = Number(score);
 
+        if (isNaN(numericMovieId)) {
+            return res.status(400).json({ message: 'Invalid movie ID' });
+        }
+
         if (isNaN(numericScore) || numericScore < 1 || numericScore > 5) {
             return res.status(400).json({ message: 'Score must be a number between 1 and 5' });
         }
@@ -156,17 +160,18 @@ const rateMovie = async (req, res) => {
         const rating = await Rating.findOneAndUpdate(
             { userId: req.user._id, movieId: numericMovieId },
             { $set: { score: numericScore, moviePoster: moviePoster || '' } },
-            { upsert: true, new: true, runValidators: true }
+            { upsert: true, new: true }
         );
 
         logEvents(`User ${req.user._id} rated movie ${numericMovieId} with score ${numericScore}`);
         res.json(rating);
     } catch (error) {
         console.error('Error rating movie:', error);
+        console.error('Error stack:', error.stack);
         if (error.code === 11000) {
             return res.status(409).json({ message: 'Duplicate rating entry' });
         }
-        logEvents(`Error rating movie: ${error.message}`, 'errorLog.txt');
+        logEvents(`Error rating movie: ${error.message} | ${error.stack}`, 'errorLog.txt');
         res.status(500).json({ message: 'Internal server error' });
     }
 };

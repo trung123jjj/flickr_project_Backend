@@ -4,7 +4,7 @@ const path = require("path");
 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user._id).select("-hashedPassword");
     logEvents(`User ${req.user._id} accessed their profile`);
     res.json(user);
   } catch (error) {

@@ -8,6 +8,8 @@ const {
   getAllUsers,
   getUser,
   updateAvatar,
+  changeUsername,
+  changePassword,
 } = require('../controllers/userController');
 const verifyJWT = require('../middleware/verifyJWT');
 const { validateUpdateUser } = require('../middleware/validate');
@@ -18,6 +20,9 @@ router.route('/').get(verifyJWT, getAllUsers).post(createNewUser);
 router.route('/profile').get(verifyJWT, getUserProfile);
 
 router.route('/avatar').put(verifyJWT, upload.single('avatar'), updateAvatar);
+
+router.route('/change-username').put(verifyJWT, changeUsername);
+router.route('/change-password').put(verifyJWT, changePassword);
 
 router
   .route('/:username')

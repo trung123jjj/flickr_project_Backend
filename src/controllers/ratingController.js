@@ -157,11 +157,21 @@ const rateMovie = async (req, res) => {
             return res.status(400).json({ message: 'Score must be a number between 1 and 5' });
         }
 
-        const rating = await Rating.findOneAndUpdate(
-            { userId: req.user._id, movieId: numericMovieId },
-            { $set: { score: numericScore, moviePoster: moviePoster || '' } },
-            { upsert: true, new: true }
-        );
+        let rating = await Rating.findOne({ userId: req.user._id, movieId: numericMovieId });
+
+        if (rating) {
+            rating.score = numericScore;
+            rating.moviePoster = moviePoster || '';
+        } else {
+            rating = new Rating({
+                userId: req.user._id,
+                movieId: numericMovieId,
+                score: numericScore,
+                moviePoster: moviePoster || '',
+            });
+        }
+
+        await rating.save();
 
         logEvents(`User ${req.user._id} rated movie ${numericMovieId} with score ${numericScore}`);
         res.json(rating);

@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
@@ -33,17 +35,26 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// 🔥 CORS (Flutter không cần credentials)
-app.use(
-  cors({
-    origin: "*",
-    credentials: false,
-  })
-);
+// CORS
+const corsOrigin = process.env.CORS_ORIGIN;
+let corsConfig;
+if (corsOrigin && corsOrigin !== '*') {
+  corsConfig = { origin: corsOrigin.split(',').map(s => s.trim()), credentials: true };
+} else {
+  corsConfig = { origin: "*", credentials: false };
+}
+app.use(cors(corsConfig));
+
+// Security headers
+app.use(helmet());
 
 // 🔥 Middleware
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
+
+// Prevent NoSQL injection
+app.use(mongoSanitize());
+
 app.use(logger);
 app.use(generalLimiter);
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

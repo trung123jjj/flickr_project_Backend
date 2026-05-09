@@ -9,7 +9,7 @@ const getUserProfile = async (req, res) => {
     res.json(user);
   } catch (error) {
     logEvents(`Error fetching user profile: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -20,7 +20,7 @@ const createNewUser = async (req, res) => {
     logEvents(`New user created: _id: ${user._id}, username: ${user.username}`);
   } catch (error) {
     logEvents(`Error creating new user: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -48,7 +48,7 @@ const updateUser = async (req, res) => {
 
     logEvents(`User ${user._id} has been updated`);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -72,7 +72,7 @@ const deleteUser = async (req, res) => {
     });
   } catch (error) {
     logEvents(`Error deleting user: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -83,7 +83,7 @@ const getAllUsers = async (req, res) => {
     res.json(users);
   } catch (error) {
     logEvents(`Error fetching all users: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -101,19 +101,19 @@ const getUser = async (req, res) => {
 
     logEvents(`return user with username: ${req.body.username}`);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 const updateAvatar = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "Vui lòng chọn file ảnh" });
+      return res.status(400).json({ message: "Please select an image file" });
     }
 
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: "User không tồn tại" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
@@ -124,14 +124,14 @@ const updateAvatar = async (req, res) => {
     const updatedUser = await User.findById(req.user._id).select("-hashedPassword");
     
     res.json({
-      message: "Cập nhật avatar thành công",
+      message: "Avatar updated successfully",
       user: updatedUser
     });
 
     logEvents(`User ${req.user._id} updated avatar`);
   } catch (error) {
     logEvents(`Error updating avatar: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

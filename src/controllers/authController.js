@@ -54,7 +54,7 @@ const SignUp = async (req, res) => {
     // failed to signUp
     logEvents(`signUp error ${error.message}`, "errorLog.txt");
 
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -132,7 +132,7 @@ const signIn = async (req, res) => {
   } catch (error) {
     // failed to signIn
     logEvents(`signIn error ${error.message}`, "errorLog.txt");
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -155,7 +155,7 @@ const signOut = async (req, res) => {
   } catch (error) {
     // failed to signOut
     logEvents(`signOut error ${error.message}`, "errorLog.txt");
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

@@ -11,7 +11,7 @@ const getAllComments = async (req, res) => {
     logEvents(`Fetched all ${comments.length} comments`);
   } catch (error) {
     logEvents(`Error fetching all comments: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -31,7 +31,7 @@ const getCommentsByMovie = async (req, res) => {
     logEvents(`Fetched ${comments.length} comments for movie ${movieIdNum}`);
   } catch (error) {
     logEvents(`Error fetching comments: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -55,7 +55,7 @@ const createComment = async (req, res) => {
     logEvents(`User ${req.user._id} created comment for movie ${movieId}`);
   } catch (error) {
     logEvents(`Error creating comment: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -76,7 +76,7 @@ const deleteComment = async (req, res) => {
     logEvents(`User ${req.user._id} deleted comment ${id}`);
   } catch (error) {
     logEvents(`Error deleting comment: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

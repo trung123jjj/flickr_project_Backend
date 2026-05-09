@@ -9,7 +9,7 @@ const getAllRatings = async (req, res) => {
     } catch (error) {
         console.error('Error fetching ratings:', error);
         logEvents(`Error fetching ratings: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -28,7 +28,7 @@ const getRatingById = async (req, res) => {
     } catch (error) {
         console.error('Error fetching rating:', error);
         logEvents(`Error fetching rating: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -57,7 +57,7 @@ const createRating = async (req, res) => {
         }
 
         logEvents(`Error creating rating: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -84,7 +84,7 @@ const updateRating = async (req, res) => {
     } catch (error) {
         console.error('Error updating rating:', error);
         logEvents(`Error updating rating: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -103,7 +103,7 @@ const deleteRating = async (req, res) => {
     } catch (error) {
         console.error('Error deleting rating:', error);
         logEvents(`Error deleting rating: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -139,7 +139,7 @@ const getMovieRating = async (req, res) => {
     } catch (error) {
         console.error('Error fetching movie ratings:', error);
         logEvents(`Error fetching movie ratings: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -167,7 +167,7 @@ const rateMovie = async (req, res) => {
             return res.status(409).json({ message: 'Duplicate rating entry' });
         }
         logEvents(`Error rating movie: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -185,7 +185,7 @@ const getUserRating = async (req, res) => {
     } catch (error) {
         console.error('Error fetching user rating:', error);
         logEvents(`Error fetching user rating: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -228,7 +228,7 @@ const getBatchMovieRatings = async (req, res) => {
     } catch (error) {
         console.error('Error fetching batch movie ratings:', error);
         logEvents(`Error fetching batch movie ratings: ${error.message}`, 'errorLog.txt');
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

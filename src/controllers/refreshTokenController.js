@@ -9,17 +9,17 @@ const handleRefreshToken = async (req, res) => {
 
   if (!cookies?.refreshToken) {
     logEvents(`refreshToken not found in cookies!`);
-    return res.sendStatus(401);
+    return res.status(401).json({ message: "Refresh token not found" });
   }
   const refreshToken = cookies.refreshToken;
 
   const foundSession = await Session.findOne({ refreshToken: refreshToken });
   if (!foundSession) {
-    return res.sendStatus(403);
+    return res.status(403).json({ message: "Invalid refresh token" });
   }
 
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
-    if (err) return res.sendStatus(403);
+    if (err) return res.status(403).json({ message: "Invalid refresh token" });
 
     const user = await User.findById(foundSession.userId);
     if (!user) return res.sendStatus(403);

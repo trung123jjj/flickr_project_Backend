@@ -18,24 +18,27 @@ const handleRefreshToken = async (req, res) => {
     return res.status(403).json({ message: "Invalid refresh token" });
   }
 
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
-    if (err) return res.status(403).json({ message: "Invalid refresh token" });
+  // Kiểm tra hạn dùng
+  if (foundSession.expiresAt < new Date()) {
+    await Session.deleteOne({ _id: foundSession._id });
+    return res.status(403).json({ message: "Refresh token expired" });
+  }
 
-    const user = await User.findById(foundSession.userId);
-    if (!user) return res.sendStatus(403);
+  const user = await User.findById(foundSession.userId);
+  if (!user) return res.sendStatus(403);
 
-    const accessToken = jwt.sign(
-      {
-        userId: user._id,
-        username: user.username,
-        role: user.role,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1800s" },
-    );
-    logEvents(`User ${user.username} refreshed token successfully!`);
-    res.json({ accessToken });
-  });
+  const accessToken = jwt.sign(
+    {
+      userId: user._id,
+      username: user.username,
+      role: user.role,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "7d" },
+  );
+
+  logEvents(`User ${user.username} refreshed token successfully!`);
+  res.json({ accessToken });
 };
 
 module.exports = { handleRefreshToken };

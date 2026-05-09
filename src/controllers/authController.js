@@ -126,7 +126,7 @@ const signIn = async (req, res) => {
 
     // send refreshToken in respond
     return res.status(200).json({
-      message: `User ${foundUser.displayName} logged in!`,
+      message: `User ${foundUser.username} logged in!`,
       accessToken,
     });
   } catch (error) {

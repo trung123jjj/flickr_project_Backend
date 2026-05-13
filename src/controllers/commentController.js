@@ -1,6 +1,7 @@
 const Comment = require("../models/Comment.model.js");
-require("../models/User.model.js"); // Đảm bảo User model được đăng ký cho populate
+require("../models/User.model.js");
 const { logEvents } = require("../middleware/logEvents");
+const path = require("path");
 
 const getAllComments = async (req, res) => {
   try {
@@ -80,4 +81,20 @@ const deleteComment = async (req, res) => {
   }
 };
 
-module.exports = { getAllComments, getCommentsByMovie, createComment, deleteComment };
+const uploadCommentImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Please select an image file" });
+    }
+
+    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/comments/${req.file.filename}`;
+
+    res.json({ imageUrl });
+    logEvents(`User ${req.user._id} uploaded comment image: ${req.file.filename}`);
+  } catch (error) {
+    logEvents(`Error uploading comment image: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { getAllComments, getCommentsByMovie, createComment, deleteComment, uploadCommentImage };

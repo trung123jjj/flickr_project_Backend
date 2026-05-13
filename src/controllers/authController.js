@@ -151,7 +151,7 @@ const signOut = async (req, res) => {
       logEvents(`User Logged out`);
       res.clearCookie("refreshToken");
     }
-    return res.status(204);
+    return res.sendStatus(204);
   } catch (error) {
     // failed to signOut
     logEvents(`signOut error ${error.message}`, "errorLog.txt");

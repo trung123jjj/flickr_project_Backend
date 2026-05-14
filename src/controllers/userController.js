@@ -124,7 +124,8 @@ const updateAvatar = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+    const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
+    const avatarUrl = `${baseUrl}/uploads/avatars/${req.file.filename}`;
     
     user.avatar_url = avatarUrl;
     await user.save();

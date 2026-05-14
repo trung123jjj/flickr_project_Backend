@@ -115,7 +115,8 @@ const uploadCommentImage = async (req, res) => {
       return res.status(400).json({ message: "Please select an image file" });
     }
 
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/comments/${req.file.filename}`;
+    const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
+    const imageUrl = `${baseUrl}/uploads/comments/${req.file.filename}`;
 
     res.json({ imageUrl });
     logEvents(`User ${req.user._id} uploaded comment image: ${req.file.filename}`);

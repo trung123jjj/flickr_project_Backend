@@ -129,6 +129,7 @@ const signIn = async (req, res) => {
       message: `User ${foundUser.username} logged in!`,
       accessToken,
       userId: foundUser._id,
+      avatar_url: foundUser.avatar_url,
     });
   } catch (error) {
     // failed to signIn

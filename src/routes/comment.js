@@ -15,4 +15,6 @@ router.post('/', verifyJWT, validateComment, commentController.createComment);
 
 router.delete('/:id', verifyJWT, commentController.deleteComment);
 
+router.post('/:id/like', verifyJWT, commentController.toggleLike);
+
 module.exports = router;

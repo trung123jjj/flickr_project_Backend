@@ -108,4 +108,33 @@ const uploadCommentImage = async (req, res) => {
   }
 };
 
-module.exports = { getAllComments, getCommentsByMovie, createComment, deleteComment, uploadCommentImage };
+const toggleLike = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    const userId = req.user._id;
+    const alreadyLiked = comment.likes.some(lid => lid.equals(userId));
+
+    if (alreadyLiked) {
+      comment.likes.pull(userId);
+    } else {
+      comment.likes.push(userId);
+    }
+
+    await comment.save();
+    const updatedComment = await Comment.findById(id)
+      .populate("userId", "username avatar_url");
+
+    logEvents(`User ${req.user._id} ${alreadyLiked ? 'unliked' : 'liked'} comment ${id}`);
+    res.json(updatedComment);
+  } catch (error) {
+    logEvents(`Error toggling like: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { getAllComments, getCommentsByMovie, createComment, deleteComment, uploadCommentImage, toggleLike };

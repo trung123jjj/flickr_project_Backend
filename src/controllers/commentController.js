@@ -63,6 +63,10 @@ const createComment = async (req, res) => {
     const populatedComment = await Comment.findById(comment._id)
       .populate("userId", "username avatar_url");
 
+    // Real-time broadcast
+    const io = req.app.get("io");
+    io.to(`movie:${movieIdNum}`).emit("newComment", populatedComment.toObject());
+
     res.status(201).json(populatedComment);
     logEvents(`User ${req.user._id} created comment for movie ${movieId}`);
   } catch (error) {
@@ -87,6 +91,15 @@ const deleteComment = async (req, res) => {
       { _id: id },
       { $set: { content: '', imageUrl: null, isDeleted: true } }
     );
+
+    const deletedComment = await Comment.findById(id)
+      .populate("userId", "username avatar_url");
+
+    // Real-time broadcast
+    const io = req.app.get("io");
+    if (deletedComment) {
+      io.to(`movie:${deletedComment.movieId}`).emit("commentDeleted", deletedComment.toObject());
+    }
 
     res.json({ message: "Comment deleted successfully" });
     logEvents(`User ${req.user._id} soft-deleted comment ${id}`);
@@ -132,6 +145,10 @@ const toggleLike = async (req, res) => {
     await comment.save();
     const updatedComment = await Comment.findById(id)
       .populate("userId", "username avatar_url");
+
+    // Real-time broadcast
+    const io = req.app.get("io");
+    io.to(`movie:${updatedComment.movieId}`).emit("commentUpdated", updatedComment.toObject());
 
     logEvents(`User ${req.user._id} ${alreadyLiked ? 'unliked' : 'liked'} comment ${id}`);
     res.json(updatedComment);

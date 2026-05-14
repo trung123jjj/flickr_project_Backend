@@ -82,10 +82,14 @@ const deleteComment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    await Comment.deleteOne({ _id: id });
+    // Soft delete: keep document for replies, clear content
+    comment.content = '';
+    comment.imageUrl = null;
+    comment.isDeleted = true;
+    await comment.save();
 
     res.json({ message: "Comment deleted successfully" });
-    logEvents(`User ${req.user._id} deleted comment ${id}`);
+    logEvents(`User ${req.user._id} soft-deleted comment ${id}`);
   } catch (error) {
     logEvents(`Error deleting comment: ${error.message}`, "errorLog.txt");
     res.status(500).json({ message: "Internal server error" });

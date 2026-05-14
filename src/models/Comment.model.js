@@ -30,7 +30,11 @@ const commentSchema = new mongoose.Schema(
         likes: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
-        }]
+        }],
+        isDeleted: {
+            type: Boolean,
+            default: false
+        }
     },
     {
         timestamps: true

@@ -21,6 +21,11 @@ const commentSchema = new mongoose.Schema(
         imageUrl: {
             type: String,
             default: null
+        },
+        parentCommentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Comment",
+            default: null
         }
     },
     {

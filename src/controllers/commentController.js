@@ -38,14 +38,25 @@ const getCommentsByMovie = async (req, res) => {
 
 const createComment = async (req, res) => {
   try {
-    const { movieId, content, imageUrl } = req.body;
+    const { movieId, content, imageUrl, parentCommentId } = req.body;
     const movieIdNum = parseInt(movieId);
+
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId);
+      if (!parentComment) {
+        return res.status(404).json({ message: "Parent comment not found" });
+      }
+      if (parentComment.movieId !== movieIdNum) {
+        return res.status(400).json({ message: "Parent comment does not belong to this movie" });
+      }
+    }
 
     const comment = await Comment.create({
       userId: req.user._id,
       movieId: movieIdNum,
       content,
       imageUrl,
+      parentCommentId: parentCommentId || null,
     });
 
     // Populate userId to return username and avatar

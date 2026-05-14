@@ -65,7 +65,7 @@ const createComment = async (req, res) => {
 
     // Real-time broadcast
     const io = req.app.get("io");
-    io.to(`movie:${movieIdNum}`).emit("newComment", populatedComment.toObject());
+    io.to(`movie:${movieIdNum}`).emit("newComment", populatedComment.toJSON());
 
     res.status(201).json(populatedComment);
     logEvents(`User ${req.user._id} created comment for movie ${movieId}`);
@@ -98,7 +98,7 @@ const deleteComment = async (req, res) => {
     // Real-time broadcast
     const io = req.app.get("io");
     if (deletedComment) {
-      io.to(`movie:${deletedComment.movieId}`).emit("commentDeleted", deletedComment.toObject());
+      io.to(`movie:${deletedComment.movieId}`).emit("commentDeleted", deletedComment.toJSON());
     }
 
     res.json({ message: "Comment deleted successfully" });
@@ -149,7 +149,7 @@ const toggleLike = async (req, res) => {
 
     // Real-time broadcast
     const io = req.app.get("io");
-    io.to(`movie:${updatedComment.movieId}`).emit("commentUpdated", updatedComment.toObject());
+    io.to(`movie:${updatedComment.movieId}`).emit("commentUpdated", updatedComment.toJSON());
 
     logEvents(`User ${req.user._id} ${alreadyLiked ? 'unliked' : 'liked'} comment ${id}`);
     res.json(updatedComment);

@@ -83,10 +83,10 @@ const deleteComment = async (req, res) => {
     }
 
     // Soft delete: keep document for replies, clear content
-    comment.content = '';
-    comment.imageUrl = null;
-    comment.isDeleted = true;
-    await comment.save();
+    await Comment.updateOne(
+      { _id: id },
+      { $set: { content: '', imageUrl: null, isDeleted: true } }
+    );
 
     res.json({ message: "Comment deleted successfully" });
     logEvents(`User ${req.user._id} soft-deleted comment ${id}`);

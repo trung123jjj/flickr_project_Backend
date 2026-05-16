@@ -26,6 +26,23 @@ const markAllRead = async (req, res) => {
   }
 };
 
+const markAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await Notification.updateOne(
+      { _id: id, userId: req.user._id },
+      { read: true }
+    );
+    if (!result.matchedCount) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+    res.json({ success: true, message: "Notification marked as read" });
+  } catch (error) {
+    logEvents(`Error marking notification read: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
@@ -50,4 +67,4 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
-module.exports = { getNotifications, markAllRead, deleteNotification, getUnreadCount };
+module.exports = { getNotifications, markAllRead, markAsRead, deleteNotification, getUnreadCount };

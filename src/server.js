@@ -101,6 +101,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/ratings", require("./routes/rating"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/comments", require("./routes/comment"));
+app.use("/api/reports", require("./routes/report"));
 
 // 🔥 Test route
 app.get("/", (req, res) => {

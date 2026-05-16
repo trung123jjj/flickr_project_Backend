@@ -30,4 +30,19 @@ const getAllReports = async (req, res) => {
   }
 };
 
-module.exports = { createReport, getAllReports };
+const deleteReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await Report.deleteOne({ _id: id });
+    if (!result.deletedCount) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+    res.json({ success: true, message: "Report deleted successfully" });
+    logEvents(`Admin deleted report ${id}`);
+  } catch (error) {
+    logEvents(`Error deleting report: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { createReport, getAllReports, deleteReport };

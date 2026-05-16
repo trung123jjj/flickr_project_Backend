@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 require("dotenv").config();
 
-const ACCESS_TOKEN_TTL = "7d"; // Tăng lên 7 ngày
+const ACCESS_TOKEN_TTL = "300s"; // 5 phút
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 const SignUp = async (req, res) => {

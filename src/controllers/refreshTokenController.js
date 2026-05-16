@@ -34,7 +34,7 @@ const handleRefreshToken = async (req, res) => {
       role: user.role,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "7d" },
+    { expiresIn: "300s" },
   );
 
   logEvents(`User ${user.username} refreshed token successfully!`);

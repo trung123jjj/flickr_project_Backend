@@ -1,4 +1,7 @@
 const User = require("../models/User.model.js");
+const Comment = require("../models/Comment.model.js");
+const Rating = require("../models/Rating.model.js");
+const Session = require("../models/Session.model.js");
 const { logEvents } = require("../middleware/logEvents");
 const path = require("path");
 const bcrypt = require("bcryptjs");
@@ -60,22 +63,27 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const username = req.params.username;
-    const result = await User.deleteOne({ username: username });
-
-    if (!result.deletedCount) {
-      logEvents(
-        `User with username ${username} not found for deletion`,
-        "errorLog.txt",
-      );
-      return res
-        .status(404)
-        .json({ message: `User with username ${username} not found` });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
     }
 
-    logEvents(`User with username ${username} has been deleted`);
+    const username = req.params.username;
+    const user = await User.findOne({ username });
+    if (!user) {
+      logEvents(`User with username ${username} not found for deletion`, "errorLog.txt");
+      return res.status(404).json({ message: `User with username ${username} not found` });
+    }
+
+    const userId = user._id;
+
+    await Comment.deleteMany({ userId });
+    await Rating.deleteMany({ userId });
+    await Session.deleteMany({ userId });
+    await User.deleteOne({ _id: userId });
+
+    logEvents(`Admin deleted user ${username} (${userId}) and all associated data`);
     return res.json({
-      message: `User with username ${username} deleted successfully`,
+      message: `User ${username} and all associated data deleted successfully`,
     });
   } catch (error) {
     logEvents(`Error deleting user: ${error.message}`, "errorLog.txt");

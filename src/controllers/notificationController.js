@@ -5,9 +5,23 @@ const getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ userId: req.user._id })
       .sort({ createdAt: -1 });
-    res.json({ success: true, data: notifications });
+    const unreadCount = await Notification.countDocuments({ userId: req.user._id, read: false });
+    res.json({ success: true, data: notifications, unreadCount });
   } catch (error) {
     logEvents(`Error fetching notifications: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const markAllRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user._id, read: false },
+      { read: true }
+    );
+    res.json({ success: true, message: "All notifications marked as read" });
+  } catch (error) {
+    logEvents(`Error marking notifications read: ${error.message}`, "errorLog.txt");
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -26,4 +40,14 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-module.exports = { getNotifications, deleteNotification };
+const getUnreadCount = async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({ userId: req.user._id, read: false });
+    res.json({ success: true, unreadCount: count });
+  } catch (error) {
+    logEvents(`Error fetching unread count: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { getNotifications, markAllRead, deleteNotification, getUnreadCount };

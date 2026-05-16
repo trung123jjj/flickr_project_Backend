@@ -19,6 +19,7 @@ const notificationSchema = new mongoose.Schema({
   movieTitle: String,
   commentId: String,
   commentContent: String,
+  read: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Notification', notificationSchema);

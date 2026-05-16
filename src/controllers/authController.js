@@ -128,6 +128,7 @@ const signIn = async (req, res) => {
     return res.status(200).json({
       message: `User ${foundUser.username} logged in!`,
       accessToken,
+      refreshToken,
       userId: foundUser._id,
       avatar_url: foundUser.avatar_url,
       role: foundUser.role,

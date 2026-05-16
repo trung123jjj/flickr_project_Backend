@@ -6,12 +6,17 @@ require("dotenv").config();
 
 const handleRefreshToken = async (req, res) => {
   const cookies = req.cookies;
+  const authHeader = req.get("Authorization");
+  let refreshToken = cookies?.refreshToken;
 
-  if (!cookies?.refreshToken) {
-    logEvents(`refreshToken not found in cookies!`);
+  if (!refreshToken && authHeader?.startsWith("Bearer ")) {
+    refreshToken = authHeader.split(" ")[1];
+  }
+
+  if (!refreshToken) {
+    logEvents(`refreshToken not found!`);
     return res.status(401).json({ message: "Refresh token not found" });
   }
-  const refreshToken = cookies.refreshToken;
 
   const foundSession = await Session.findOne({ refreshToken: refreshToken });
   if (!foundSession) {

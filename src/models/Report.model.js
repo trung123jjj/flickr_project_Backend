@@ -11,6 +11,10 @@ const ReportSchema = new mongoose.Schema(
     message: {
       type: String,
       required: true
+    },
+    commentContent: {
+      type: String,
+      default: ''
     }
   },
   { timestamps: true }

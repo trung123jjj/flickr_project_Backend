@@ -3,13 +3,13 @@ const { logEvents } = require("../middleware/logEvents");
 
 const createReport = async (req, res) => {
   try {
-    const { username, message } = req.body;
+    const { username, message, commentContent } = req.body;
 
     if (!username || !message) {
       return res.status(400).json({ message: "Username and message are required" });
     }
 
-    const report = await Report.create({ username, message });
+    const report = await Report.create({ username, message, commentContent });
 
     res.status(201).json({ success: true, data: report });
     logEvents(`User ${req.user._id} reported user ${username}: ${message}`);

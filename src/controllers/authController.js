@@ -130,6 +130,7 @@ const signIn = async (req, res) => {
       accessToken,
       userId: foundUser._id,
       avatar_url: foundUser.avatar_url,
+      role: foundUser.role,
     });
   } catch (error) {
     // failed to signIn

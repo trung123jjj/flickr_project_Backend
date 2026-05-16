@@ -19,4 +19,15 @@ const createReport = async (req, res) => {
   }
 };
 
-module.exports = { createReport };
+const getAllReports = async (req, res) => {
+  try {
+    const reports = await Report.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: reports });
+    logEvents(`Admin fetched all reports`);
+  } catch (error) {
+    logEvents(`Error fetching reports: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { createReport, getAllReports };

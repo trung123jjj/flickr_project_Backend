@@ -1,4 +1,5 @@
 const Comment = require("../models/Comment.model.js");
+const Notification = require("../models/Notification.model.js");
 require("../models/User.model.js");
 const { logEvents } = require("../middleware/logEvents");
 const path = require("path");
@@ -38,7 +39,7 @@ const getCommentsByMovie = async (req, res) => {
 
 const createComment = async (req, res) => {
   try {
-    const { movieId, content, imageUrl, parentCommentId } = req.body;
+    const { movieId, content, imageUrl, parentCommentId, movieTitle } = req.body;
     const movieIdNum = parseInt(movieId);
 
     if (parentCommentId) {
@@ -62,6 +63,22 @@ const createComment = async (req, res) => {
     // Populate userId to return username and avatar
     const populatedComment = await Comment.findById(comment._id)
       .populate("userId", "username avatar_url");
+
+    // Create notification for reply
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId).populate("userId", "username");
+      if (parentComment && parentComment.userId && parentComment.userId._id.toString() !== req.user._id.toString()) {
+        const movieTitleStr = movieTitle || `movie ${movieIdNum}`;
+        await Notification.create({
+          userId: parentComment.userId._id,
+          type: 'reply',
+          message: `${req.user.username} replied to your comment in "${movieTitleStr}" chat`,
+          movieId: movieIdNum,
+          movieTitle: movieTitleStr,
+          commentId: comment._id.toString(),
+        });
+      }
+    }
 
     // Real-time broadcast
     const io = req.app.get("io");

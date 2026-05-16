@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createReport, getAllReports, deleteReport } = require('../controllers/reportController');
+const { createReport, getAllReports, deleteReport, sendNotice } = require('../controllers/reportController');
 const verifyJWT = require('../middleware/verifyJWT');
 
 const requireAdmin = (req, res, next) => {
@@ -13,6 +13,8 @@ const requireAdmin = (req, res, next) => {
 router.post('/', verifyJWT, createReport);
 
 router.get('/', verifyJWT, requireAdmin, getAllReports);
+
+router.post('/notice', verifyJWT, requireAdmin, sendNotice);
 
 router.delete('/:id', verifyJWT, requireAdmin, deleteReport);
 

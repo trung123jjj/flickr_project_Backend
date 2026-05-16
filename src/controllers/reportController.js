@@ -1,4 +1,6 @@
 const Report = require("../models/Report.model.js");
+const User = require("../models/User.model.js");
+const Notification = require("../models/Notification.model.js");
 const { logEvents } = require("../middleware/logEvents");
 
 const createReport = async (req, res) => {
@@ -45,4 +47,31 @@ const deleteReport = async (req, res) => {
   }
 };
 
-module.exports = { createReport, getAllReports, deleteReport };
+const sendNotice = async (req, res) => {
+  try {
+    const { username, commentContent } = req.body;
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await Notification.create({
+      userId: user._id,
+      type: 'notice',
+      message: `you have violated the platform rules in: ${commentContent || 'your comment'}`,
+      commentContent: commentContent || '',
+    });
+
+    res.json({ success: true, message: "Notice sent to user" });
+    logEvents(`Admin sent notice to user ${username}`);
+  } catch (error) {
+    logEvents(`Error sending notice: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { createReport, getAllReports, deleteReport, sendNotice };

@@ -1,0 +1,652 @@
+openapi: "3.0.0"
+info:
+  title: "Flickr Backend API"
+  version: "1.0.0"
+  description: "API documentation for Flickr Backend Project"
+servers:
+  - url: "https://flickr-project-backend-6.onrender.com"
+    description: "Production server"
+  - url: "http://localhost:8080"
+    description: "Development server (cleartext - do not use for production)"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+paths:
+  /api/auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: "Đăng ký tài khoản mới"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        "201":
+          description: "Đăng ký thành công"
+        "400":
+          description: "Dữ liệu không hợp lệ"
+
+  /api/auth/signin:
+    post:
+      tags:
+        - Auth
+      summary: "Đăng nhập"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: "Đăng nhập thành công"
+        "401":
+          description: "Sai thông tin đăng nhập"
+
+  /api/auth/signout:
+    post:
+      tags:
+        - Auth
+      summary: "Đăng xuất"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Đăng xuất thành công"
+
+  /api/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: "Làm mới access token"
+      security: []
+      responses:
+        "200":
+          description: "Token mới"
+        "403":
+          description: "Refresh token không hợp lệ"
+
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: "Lấy danh sách tất cả người dùng"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Danh sách người dùng"
+        "401":
+          description: "Chưa xác thực"
+    post:
+      tags:
+        - Users
+      summary: "Tạo người dùng mới"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: "Tạo thành công"
+
+  /api/users/profile:
+    get:
+      tags:
+        - Users
+      summary: "Lấy thông tin profile của user hiện tại"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Thông tin profile"
+
+  /api/users/avatar:
+    put:
+      tags:
+        - Users
+      summary: "Cập nhật avatar"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: "Cập nhật avatar thành công"
+
+  /api/users/change-username:
+    put:
+      tags:
+        - Users
+      summary: "Thay đổi username"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newUsername:
+                  type: string
+      responses:
+        "200":
+          description: "Đổi username thành công"
+
+  /api/users/change-password:
+    put:
+      tags:
+        - Users
+      summary: "Thay đổi mật khẩu"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: "Đổi mật khẩu thành công"
+
+  /api/users/{username}:
+    get:
+      tags:
+        - Users
+      summary: "Lấy thông tin user theo username"
+      security: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Thông tin user"
+    put:
+      tags:
+        - Users
+      summary: "Cập nhật thông tin user"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: "Cập nhật thành công"
+    delete:
+      tags:
+        - Users
+      summary: "Xóa user"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Xóa thành công"
+
+  /api/ratings/movie/{movieId}:
+    get:
+      tags:
+        - Ratings
+      summary: "Lấy rating trung bình của phim"
+      security: []
+      parameters:
+        - in: path
+          name: movieId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Thông tin rating"
+
+  /api/ratings:
+    post:
+      tags:
+        - Ratings
+      summary: "Rate phim (toggle)"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                score:
+                  type: number
+      responses:
+        "200":
+          description: "Rate thành công"
+
+  /api/ratings/user/{movieId}:
+    get:
+      tags:
+        - Ratings
+      summary: "Lấy rating của user hiện tại cho phim"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: movieId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Rating của user"
+
+  /api/ratings/add:
+    post:
+      tags:
+        - Ratings
+      summary: "Thêm rating cho phim"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                score:
+                  type: number
+      responses:
+        "201":
+          description: "Tạo rating thành công"
+
+  /api/ratings/get:
+    get:
+      tags:
+        - Ratings
+      summary: "Lấy tất cả ratings"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Danh sách ratings"
+
+  /api/ratings/delete:
+    delete:
+      tags:
+        - Ratings
+      summary: "Xóa rating"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+      responses:
+        "200":
+          description: "Xóa thành công"
+
+  /api/ratings/update:
+    put:
+      tags:
+        - Ratings
+      summary: "Cập nhật rating"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                score:
+                  type: number
+      responses:
+        "200":
+          description: "Cập nhật thành công"
+
+  /api/ratings/batch:
+    post:
+      tags:
+        - Ratings
+      summary: "Lấy ratings hàng loạt theo danh sách movieId"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: "Danh sách ratings"
+
+  /api/comments:
+    get:
+      tags:
+        - Comments
+      summary: "Lấy tất cả comments"
+      security: []
+      responses:
+        "200":
+          description: "Danh sách comments"
+    post:
+      tags:
+        - Comments
+      summary: "Tạo comment mới"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                content:
+                  type: string
+      responses:
+        "201":
+          description: "Tạo comment thành công"
+
+  /api/comments/upload-image:
+    post:
+      tags:
+        - Comments
+      summary: "Upload ảnh cho comment"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                commentImage:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: "Upload ảnh thành công"
+
+  /api/comments/{id}:
+    get:
+      tags:
+        - Comments
+      summary: "Lấy comments theo movieId"
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Danh sách comments của phim"
+    delete:
+      tags:
+        - Comments
+      summary: "Xóa comment"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Xóa thành công"
+
+  /api/comments/{id}/like:
+    post:
+      tags:
+        - Comments
+      summary: "Like/unlike comment"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Toggle like thành công"
+
+  /api/reports:
+    post:
+      tags:
+        - Reports
+      summary: "Tạo report mới"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetId:
+                  type: string
+                targetType:
+                  type: string
+                  enum:
+                    - comment
+                    - user
+                reason:
+                  type: string
+      responses:
+        "201":
+          description: "Tạo report thành công"
+    get:
+      tags:
+        - Reports
+      summary: "Lấy tất cả reports (admin)"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Danh sách reports"
+        "403":
+          description: "Không có quyền admin"
+
+  /api/reports/notice:
+    post:
+      tags:
+        - Reports
+      summary: "Gửi thông báo cho user vi phạm (admin)"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                message:
+                  type: string
+      responses:
+        "200":
+          description: "Gửi thông báo thành công"
+
+  /api/reports/{id}:
+    delete:
+      tags:
+        - Reports
+      summary: "Xóa report (admin)"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Xóa thành công"
+
+  /api/notifications:
+    get:
+      tags:
+        - Notifications
+      summary: "Lấy danh sách thông báo của user"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Danh sách thông báo"
+
+  /api/notifications/unread-count:
+    get:
+      tags:
+        - Notifications
+      summary: "Lấy số lượng thông báo chưa đọc"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Số lượng chưa đọc"
+
+  /api/notifications/read-all:
+    patch:
+      tags:
+        - Notifications
+      summary: "Đánh dấu tất cả thông báo đã đọc"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Đánh dấu thành công"
+
+  /api/notifications/{id}/read:
+    patch:
+      tags:
+        - Notifications
+      summary: "Đánh dấu một thông báo đã đọc"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Đánh dấu thành công"
+
+  /api/notifications/{id}:
+    delete:
+      tags:
+        - Notifications
+      summary: "Xóa thông báo"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Xóa thành công"

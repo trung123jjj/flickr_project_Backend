@@ -1,0 +1,3 @@
+apis:
+  api_doc.yaml:
+    alias: flickr-backend-api

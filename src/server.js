@@ -7,6 +7,8 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
 const http = require("http");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 const { Server } = require("socket.io");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
@@ -99,6 +101,13 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Rate limit
 app.use(generalLimiter);
+
+// Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
 
 // 🔥 Routes
 app.use("/api/auth", authLimiter, require("./routes/auth"));

@@ -11,6 +11,9 @@
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "overrides": {
+    "ws": "^8.20.1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,12 +28,16 @@
     "express-rate-limit": "^8.4.1",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
+    "js-yaml": "^4.1.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",
     "multer": "^2.1.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "yaml": "^2.9.0"
   }
 }

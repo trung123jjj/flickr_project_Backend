@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-const mongoSanitize = require("express-mongo-sanitize");
+const sanitizeMiddleware = require("./middleware/sanitize");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
@@ -93,7 +93,7 @@ app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 // Prevent NoSQL injection
-app.use(mongoSanitize());
+app.use(sanitizeMiddleware());
 
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 

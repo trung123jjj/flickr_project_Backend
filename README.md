@@ -4,6 +4,7 @@ Backend API for **Flickr** — a real-time social movie discovery, rating, and c
 
 - **Frontend:** [Flutter app](https://github.com/anomalyco/flickr_project)
 - **Base URL (Production):** `https://flickr-project-backend-6.onrender.com`
+- **API Docs (Swagger):** `https://flickr-project-backend-6.onrender.com/api-docs`
 
 ---
 

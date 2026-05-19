@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-// const mongoSanitize = require("express-mongo-sanitize");
+const mongoSanitize = require("express-mongo-sanitize");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
@@ -86,18 +86,22 @@ if (corsOrigin && corsOrigin !== '*') {
 app.use(cors(corsConfig));
 
 // Security headers
-// app.use(helmet());
+app.use(helmet());
 
 // 🔥 Middleware
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 // Prevent NoSQL injection
-// app.use(generalLimiter);
+app.use(mongoSanitize());
+
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Rate limit
+app.use(generalLimiter);
+
 // 🔥 Routes
-app.use("/api/auth", require("./routes/auth"));
+app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/ratings", require("./routes/rating"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/comments", require("./routes/comment"));

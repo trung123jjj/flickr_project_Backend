@@ -21,11 +21,27 @@ const getUserProfile = async (req, res) => {
 
 const createNewUser = async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long" });
+    }
+
+    const duplicate = await User.findOne({ username });
+    if (duplicate) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, hashedPassword });
     const userWithoutPassword = user.toObject();
     delete userWithoutPassword.hashedPassword;
 
-    res.status(200).json(userWithoutPassword);
+    res.status(201).json(userWithoutPassword);
     logEvents(`New user created: _id: ${user._id}, username: ${user.username}`);
   } catch (error) {
     logEvents(`Error creating new user: ${error.message}`, "errorLog.txt");
@@ -44,7 +60,12 @@ const updateUser = async (req, res) => {
 
     const updateData = {};
     if (req.body.username) updateData.username = req.body.username;
-    if (req.body.hashedPassword) updateData.hashedPassword = req.body.hashedPassword;
+    if (req.body.password) {
+      if (req.body.password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long" });
+      }
+      updateData.hashedPassword = await bcrypt.hash(req.body.password, 10);
+    }
     if (req.body.avatar_url) updateData.avatar_url = req.body.avatar_url;
 
     await user.updateOne(updateData);

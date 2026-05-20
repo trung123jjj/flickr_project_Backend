@@ -16,6 +16,7 @@ components:
       bearerFormat: "JWT"
 
 paths:
+  # ────────────── Auth ──────────────
   /api/auth/signup:
     post:
       tags:
@@ -30,22 +31,23 @@ paths:
               type: object
               required:
                 - username
-                - email
                 - password
               properties:
                 username:
                   type: string
-                email:
-                  type: string
-                  format: email
+                  minLength: 3
+                  maxLength: 30
                 password:
                   type: string
                   format: password
+                  minLength: 8
       responses:
         "201":
           description: "Registration successful"
         "400":
           description: "Invalid data"
+        "409":
+          description: "Username already exists"
 
   /api/auth/signin:
     post:
@@ -70,7 +72,7 @@ paths:
                   format: password
       responses:
         "200":
-          description: "Login successful"
+          description: "Login successful (returns accessToken, refreshToken, userId, avatar_url, role)"
         "401":
           description: "Wrong credentials"
 
@@ -79,11 +81,10 @@ paths:
       tags:
         - Auth
       summary: "Logout"
-      security:
-        - bearerAuth: []
+      security: []
       responses:
-        "200":
-          description: "Logout successful"
+        "204":
+          description: "Logout successful (no content)"
 
   /api/auth/refresh:
     post:
@@ -93,44 +94,13 @@ paths:
       security: []
       responses:
         "200":
-          description: "New token"
-        "403":
-          description: "Invalid refresh token"
-
-  /api/users:
-    get:
-      tags:
-        - Users
-      summary: "Get all users"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "List of users"
+          description: "New access token"
         "401":
-          description: "Unauthorized"
-    post:
-      tags:
-        - Users
-      summary: "Create new user"
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-      responses:
-        "201":
-          description: "Created successfully"
+          description: "Refresh token not found"
+        "403":
+          description: "Invalid or expired refresh token"
 
+  # ────────────── Users ──────────────
   /api/users/profile:
     get:
       tags:
@@ -176,12 +146,21 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - currentPassword
+                - newUsername
               properties:
+                currentPassword:
+                  type: string
                 newUsername:
                   type: string
       responses:
         "200":
-          description: "Username changed successfully"
+          description: "Username changed successfully (returns new accessToken)"
+        "401":
+          description: "Current password is incorrect"
+        "409":
+          description: "Username already exists"
 
   /api/users/change-password:
     put:
@@ -196,55 +175,24 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - currentPassword
+                - newPassword
               properties:
                 currentPassword:
                   type: string
                 newPassword:
                   type: string
+                  minLength: 8
       responses:
         "200":
           description: "Password changed successfully"
 
   /api/users/{username}:
-    get:
-      tags:
-        - Users
-      summary: "Get user by username"
-      security: []
-      parameters:
-        - in: path
-          name: username
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "User information"
-    put:
-      tags:
-        - Users
-      summary: "Update user information"
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: username
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        "200":
-          description: "Updated successfully"
     delete:
       tags:
         - Users
-      summary: "Delete user"
+      summary: "Delete user (admin only)"
       security:
         - bearerAuth: []
       parameters:
@@ -255,13 +203,18 @@ paths:
             type: string
       responses:
         "200":
-          description: "Deleted successfully"
+          description: "User deleted successfully"
+        "403":
+          description: "Admin access required"
+        "404":
+          description: "User not found"
 
+  # ────────────── Ratings ──────────────
   /api/ratings/movie/{movieId}:
     get:
       tags:
         - Ratings
-      summary: "Get average rating for movie"
+      summary: "Get average rating for movie (optional auth for user score)"
       security: []
       parameters:
         - in: path
@@ -271,13 +224,13 @@ paths:
             type: string
       responses:
         "200":
-          description: "Rating information"
+          description: "Rating information (averageScore, totalRatings, userScore)"
 
   /api/ratings:
     post:
       tags:
         - Ratings
-      summary: "Toggle movie rating"
+      summary: "Create or update movie rating (upsert)"
       security:
         - bearerAuth: []
       requestBody:
@@ -286,106 +239,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - movieId
+                - score
               properties:
                 movieId:
                   type: string
                 score:
                   type: number
-      responses:
-        "200":
-          description: "Rating successful"
-
-  /api/ratings/user/{movieId}:
-    get:
-      tags:
-        - Ratings
-      summary: "Get current user rating for movie"
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: movieId
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "User rating"
-
-  /api/ratings/add:
-    post:
-      tags:
-        - Ratings
-      summary: "Add movie rating"
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                movieId:
-                  type: string
-                score:
-                  type: number
-      responses:
-        "201":
-          description: "Rating created successfully"
-
-  /api/ratings/get:
-    get:
-      tags:
-        - Ratings
-      summary: "Get all ratings"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "List of ratings"
-
-  /api/ratings/delete:
-    delete:
-      tags:
-        - Ratings
-      summary: "Delete rating"
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                movieId:
+                  minimum: 1
+                  maximum: 5
+                moviePoster:
                   type: string
       responses:
         "200":
-          description: "Deleted successfully"
-
-  /api/ratings/update:
-    put:
-      tags:
-        - Ratings
-      summary: "Update rating"
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                movieId:
-                  type: string
-                score:
-                  type: number
-      responses:
-        "200":
-          description: "Updated successfully"
+          description: "Rating upserted successfully"
+        "400":
+          description: "Invalid movie ID or score"
 
   /api/ratings/batch:
     post:
@@ -399,6 +269,8 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - movieIds
               properties:
                 movieIds:
                   type: array
@@ -406,8 +278,9 @@ paths:
                     type: string
       responses:
         "200":
-          description: "List of ratings"
+          description: "Map of movieId to average rating"
 
+  # ────────────── Comments ──────────────
   /api/comments:
     get:
       tags:
@@ -429,10 +302,19 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - movieId
               properties:
                 movieId:
                   type: string
                 content:
+                  type: string
+                  maxLength: 500
+                imageUrl:
+                  type: string
+                parentCommentId:
+                  type: string
+                movieTitle:
                   type: string
       responses:
         "201":
@@ -457,9 +339,9 @@ paths:
                   format: binary
       responses:
         "200":
-          description: "Image uploaded successfully"
+          description: "Image uploaded successfully (returns imageUrl)"
 
-  /api/comments/{id}:
+  /api/comments/{movieId}:
     get:
       tags:
         - Comments
@@ -467,17 +349,19 @@ paths:
       security: []
       parameters:
         - in: path
-          name: id
+          name: movieId
           required: true
           schema:
             type: string
       responses:
         "200":
           description: "Movie comments list"
+
+  /api/comments/{id}:
     delete:
       tags:
         - Comments
-      summary: "Delete comment"
+      summary: "Delete comment (soft delete)"
       security:
         - bearerAuth: []
       parameters:
@@ -488,7 +372,9 @@ paths:
             type: string
       responses:
         "200":
-          description: "Deleted successfully"
+          description: "Comment deleted successfully"
+        "404":
+          description: "Comment not found"
 
   /api/comments/{id}/like:
     post:
@@ -503,10 +389,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                movieTitle:
+                  type: string
       responses:
         "200":
           description: "Like toggled successfully"
 
+  # ────────────── Reports ──────────────
   /api/reports:
     post:
       tags:
@@ -520,15 +417,16 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - username
+                - message
               properties:
-                targetId:
+                username:
                   type: string
-                targetType:
+                  description: "Username of the reported user"
+                message:
                   type: string
-                  enum:
-                    - comment
-                    - user
-                reason:
+                commentContent:
                   type: string
       responses:
         "201":
@@ -536,7 +434,7 @@ paths:
     get:
       tags:
         - Reports
-      summary: "Get all reports (admin)"
+      summary: "Get all reports (admin only)"
       security:
         - bearerAuth: []
       responses:
@@ -549,7 +447,7 @@ paths:
     post:
       tags:
         - Reports
-      summary: "Send notice to violating user (admin)"
+      summary: "Send notice to violating user (admin only)"
       security:
         - bearerAuth: []
       requestBody:
@@ -558,20 +456,26 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - username
               properties:
-                userId:
+                username:
                   type: string
-                message:
+                commentContent:
                   type: string
       responses:
         "200":
           description: "Notice sent successfully"
+        "400":
+          description: "Username is required"
+        "404":
+          description: "User not found"
 
   /api/reports/{id}:
     delete:
       tags:
         - Reports
-      summary: "Delete report (admin)"
+      summary: "Delete report (admin only)"
       security:
         - bearerAuth: []
       parameters:
@@ -582,8 +486,11 @@ paths:
             type: string
       responses:
         "200":
-          description: "Deleted successfully"
+          description: "Report deleted successfully"
+        "404":
+          description: "Report not found"
 
+  # ────────────── Notifications ──────────────
   /api/notifications:
     get:
       tags:
@@ -593,7 +500,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          description: "List of notifications"
+          description: "List of notifications with unreadCount"
 
   /api/notifications/unread-count:
     get:
@@ -633,6 +540,8 @@ paths:
       responses:
         "200":
           description: "Marked successfully"
+        "404":
+          description: "Notification not found"
 
   /api/notifications/{id}:
     delete:
@@ -649,4 +558,6 @@ paths:
             type: string
       responses:
         "200":
-          description: "Deleted successfully"
+          description: "Notification deleted"
+        "404":
+          description: "Notification not found"

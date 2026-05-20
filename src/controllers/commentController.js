@@ -146,7 +146,8 @@ const uploadCommentImage = async (req, res) => {
 const toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
-    const comment = await Comment.findById(id);
+    const { movieId, movieTitle } = req.body;
+    const comment = await Comment.findById(id).populate("userId", "username");
     if (!comment) {
       return res.status(404).json({ message: "Comment not found" });
     }
@@ -163,6 +164,20 @@ const toggleLike = async (req, res) => {
     await comment.save();
     const updatedComment = await Comment.findById(id)
       .populate("userId", "username avatar_url");
+
+    // Create notification for like
+    if (!alreadyLiked && comment.userId && comment.userId._id.toString() !== req.user._id.toString()) {
+      const movieIdNum = movieId ? parseInt(movieId) : updatedComment.movieId;
+      const movieTitleStr = movieTitle || `movie ${movieIdNum}`;
+      await Notification.create({
+        userId: comment.userId._id,
+        type: 'like',
+        message: `${req.user.username} liked your comment in "${movieTitleStr}" chat`,
+        movieId: movieIdNum,
+        movieTitle: movieTitleStr,
+        commentId: id,
+      });
+    }
 
     // Real-time broadcast
     const io = req.app.get("io");

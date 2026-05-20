@@ -69,7 +69,7 @@ const createComment = async (req, res) => {
       const parentComment = await Comment.findById(parentCommentId).populate("userId", "username");
       if (parentComment && parentComment.userId && parentComment.userId._id.toString() !== req.user._id.toString()) {
         const movieTitleStr = movieTitle || `movie ${movieIdNum}`;
-        await Notification.create({
+        const notification = await Notification.create({
           userId: parentComment.userId._id,
           type: 'reply',
           message: `${req.user.username} replied to your comment in "${movieTitleStr}" chat`,
@@ -77,6 +77,14 @@ const createComment = async (req, res) => {
           movieTitle: movieTitleStr,
           commentId: comment._id.toString(),
         });
+
+        // Real-time notification via socket
+        try {
+          const io = req.app.get("io");
+          io.to(`user:${parentComment.userId._id}`).emit("newNotification", notification.toJSON());
+        } catch (e) {
+          logEvents(`Error emitting notification: ${e.message}`, "errorLog.txt");
+        }
       }
     }
 
@@ -169,7 +177,7 @@ const toggleLike = async (req, res) => {
     if (!alreadyLiked && comment.userId && comment.userId._id.toString() !== req.user._id.toString()) {
       const movieIdNum = movieId ? parseInt(movieId) : updatedComment.movieId;
       const movieTitleStr = movieTitle || `movie ${movieIdNum}`;
-      await Notification.create({
+      const notification = await Notification.create({
         userId: comment.userId._id,
         type: 'like',
         message: `${req.user.username} liked your comment in "${movieTitleStr}" chat`,
@@ -177,6 +185,14 @@ const toggleLike = async (req, res) => {
         movieTitle: movieTitleStr,
         commentId: id,
       });
+
+      // Real-time notification via socket
+      try {
+        const io = req.app.get("io");
+        io.to(`user:${comment.userId._id}`).emit("newNotification", notification.toJSON());
+      } catch (e) {
+        logEvents(`Error emitting notification: ${e.message}`, "errorLog.txt");
+      }
     }
 
     // Real-time broadcast

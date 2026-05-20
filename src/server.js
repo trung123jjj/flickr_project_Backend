@@ -10,9 +10,11 @@ const http = require("http");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const { connectDB } = require("./libs/db");
+const User = require("./models/User.model.js");
 
 require("dotenv").config();
 
@@ -31,8 +33,30 @@ const io = new Server(server, {
   },
 });
 
+// Socket.IO authentication
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+      return next(new Error("Authentication required"));
+    }
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId).select("-hashedPassword");
+    if (!user) {
+      return next(new Error("User not found"));
+    }
+    socket.user = user;
+    next();
+  } catch (err) {
+    next(new Error("Authentication failed"));
+  }
+});
+
 io.on("connection", (socket) => {
-  console.log(`[Socket.IO] Client connected: ${socket.id}`);
+  console.log(`[Socket.IO] User ${socket.user?.username} connected: ${socket.id}`);
+  if (socket.user) {
+    socket.join(`user:${socket.user._id}`);
+  }
   socket.on("joinMovie", (movieId) => {
     socket.join(`movie:${movieId}`);
     console.log(`[Socket.IO] ${socket.id} joined movie:${movieId}`);
@@ -41,7 +65,7 @@ io.on("connection", (socket) => {
     socket.leave(`movie:${movieId}`);
   });
   socket.on("disconnect", () => {
-    console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
+    console.log(`[Socket.IO] User ${socket.user?.username} disconnected: ${socket.id}`);
   });
 });
 

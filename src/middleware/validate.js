@@ -29,14 +29,6 @@ const validateSignin = [
   handleValidationErrors,
 ];
 
-const validateRating = [
-  body("movieId")
-    .isInt({ min: 1 }).withMessage("movieId must be a positive integer"),
-  body("score")
-    .isFloat({ min: 0, max: 5 }).withMessage("Score must be between 0 and 5"),
-  handleValidationErrors,
-];
-
 const validateComment = [
   body("movieId")
     .isInt({ min: 1 }).withMessage("movieId must be a positive integer"),
@@ -50,23 +42,9 @@ const validateComment = [
   handleValidationErrors,
 ];
 
-const validateUpdateUser = [
-  body("username")
-    .optional()
-    .trim()
-    .isLength({ min: 3, max: 30 }).withMessage("Username must be 3-30 characters")
-    .matches(/^[a-zA-Z0-9_]+$/).withMessage("Username can only contain letters, numbers, and underscores"),
-  body("password")
-    .optional()
-    .isLength({ min: 8 }).withMessage("Password must be at least 8 characters"),
-  handleValidationErrors,
-];
-
 module.exports = {
   handleValidationErrors,
   validateSignup,
   validateSignin,
-  validateRating,
   validateComment,
-  validateUpdateUser,
 };

@@ -19,69 +19,6 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-const createNewUser = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters long" });
-    }
-
-    const duplicate = await User.findOne({ username });
-    if (duplicate) {
-      return res.status(409).json({ message: "Username already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, hashedPassword });
-    const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.hashedPassword;
-
-    res.status(201).json(userWithoutPassword);
-    logEvents(`New user created: _id: ${user._id}, username: ${user.username}`);
-  } catch (error) {
-    logEvents(`Error creating new user: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const updateUser = async (req, res) => {
-  try {
-    const username = req.params.username;
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const updateData = {};
-    if (req.body.username) updateData.username = req.body.username;
-    if (req.body.password) {
-      if (req.body.password.length < 8) {
-        return res.status(400).json({ message: "Password must be at least 8 characters long" });
-      }
-      updateData.hashedPassword = await bcrypt.hash(req.body.password, 10);
-    }
-    if (req.body.avatar_url) updateData.avatar_url = req.body.avatar_url;
-
-    await user.updateOne(updateData);
-
-    const updatedUser = await User.findOne({
-      username: updateData.username || username,
-    }).select("-hashedPassword");
-
-    res.json(updatedUser);
-
-    logEvents(`User ${user._id} has been updated`);
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 const deleteUser = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -108,36 +45,6 @@ const deleteUser = async (req, res) => {
     });
   } catch (error) {
     logEvents(`Error deleting user: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select("-hashedPassword");
-    logEvents(`All users have been retrieved`);
-    res.json(users);
-  } catch (error) {
-    logEvents(`Error fetching all users: ${error.message}`, "errorLog.txt");
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const getUser = async (req, res) => {
-  try {
-    const username = req.params.username;
-    const user = await User.findOne({
-      username: username,
-    }).select("-hashedPassword");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(user);
-
-    logEvents(`return user with username: ${username}`);
-  } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -226,4 +133,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, createNewUser, updateUser, deleteUser, getAllUsers, getUser, updateAvatar, changeUsername, changePassword };
+module.exports = { getUserProfile, deleteUser, updateAvatar, changeUsername, changePassword };

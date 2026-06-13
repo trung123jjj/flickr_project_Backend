@@ -5,7 +5,7 @@ const router = express.Router();
 const TMDB_BASE = 'api.themoviedb.org';
 const TMDB_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
-router.all('/*', (req, res) => {
+router.all('/{*path}', (req, res) => {
   const tmdbPath = '/3' + req.path;
   const query = new URLSearchParams(req.query).toString();
   const urlPath = query ? `${tmdbPath}?${query}` : tmdbPath;

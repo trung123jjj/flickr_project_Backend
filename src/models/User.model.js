@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "https://static.thenounproject.com/png/anonymous-avatar-icon-2631891-512.png",
     },
+    avatar_data: {
+      type: String,
+      default: null,
+    },
     role: {
       type: String,
       default: "user",

@@ -10,7 +10,7 @@ require("dotenv").config();
 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-hashedPassword");
+    const user = await User.findById(req.user._id).select("-hashedPassword -avatar_data");
     logEvents(`User ${req.user._id} accessed their profile`);
     res.json(user);
   } catch (error) {
@@ -49,6 +49,40 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const fixAvatars = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const https = require('https');
+    const DEFAULT_AVATAR = 'https://static.thenounproject.com/png/anonymous-avatar-icon-2631891-512.png';
+
+    const urlExists = (url) => new Promise((resolve) => {
+      https.get(url, (r) => resolve(r.statusCode >= 200 && r.statusCode < 400))
+        .on('error', () => resolve(false));
+    });
+
+    const users = await User.find({ avatar_url: { $ne: null, $ne: DEFAULT_AVATAR } });
+    let fixed = 0;
+
+    for (const user of users) {
+      const exists = await urlExists(user.avatar_url);
+      if (!exists) {
+        user.avatar_url = DEFAULT_AVATAR;
+        await user.save();
+        fixed++;
+      }
+    }
+
+    res.json({ message: `Fixed ${fixed} broken avatars`, fixed });
+    logEvents(`Admin fixed ${fixed} broken avatars`);
+  } catch (error) {
+    logEvents(`Error fixing avatars: ${error.message}`, "errorLog.txt");
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const updateAvatar = async (req, res) => {
   try {
     if (!req.file) {
@@ -60,13 +94,20 @@ const updateAvatar = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
-    const avatarUrl = `${baseUrl}/uploads/avatars/${req.file.filename}`;
-    
-    user.avatar_url = avatarUrl;
+    const fs = require('fs');
+    const imagePath = req.file.path;
+    const imageBuffer = fs.readFileSync(imagePath);
+    const base64Data = imageBuffer.toString('base64');
+    const mimeType = req.file.mimetype;
+
+    user.avatar_data = `data:${mimeType};base64,${base64Data}`;
+    user.avatar_url = `${process.env.PUBLIC_URL || ''}/api/users/avatar-data/${req.user._id}`;
     await user.save();
 
-    const updatedUser = await User.findById(req.user._id).select("-hashedPassword");
+    // Clean up local file
+    fs.unlink(imagePath, () => {});
+
+    const updatedUser = await User.findById(req.user._id).select("-hashedPassword -avatar_data");
     
     res.json({
       message: "Avatar updated successfully",
@@ -133,4 +174,22 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, deleteUser, updateAvatar, changeUsername, changePassword };
+const getAvatarData = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user || !user.avatar_data) {
+      return res.redirect('https://static.thenounproject.com/png/anonymous-avatar-icon-2631891-512.png');
+    }
+    const parts = user.avatar_data.split(',');
+    const base64 = parts[1];
+    const mime = parts[0].split(';')[0].split(':')[1] || 'image/jpeg';
+    const img = Buffer.from(base64, 'base64');
+    res.setHeader('Content-Type', mime);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(img);
+  } catch (error) {
+    res.redirect('https://static.thenounproject.com/png/anonymous-avatar-icon-2631891-512.png');
+  }
+};
+
+module.exports = { getUserProfile, deleteUser, updateAvatar, changeUsername, changePassword, fixAvatars, getAvatarData };

@@ -2,20 +2,167 @@
 info:
   title: "Flickr Backend API"
   version: "1.0.0"
-  description: "API documentation for Flickr Backend Project"
+  description: "API documentation for Flickr Backend Project — a real-time social movie discovery, rating, and commenting app."
 servers:
   - url: "https://flickr-project-backend-6.onrender.com"
     description: "Production server"
   - url: "http://localhost:8080"
-    description: "Development server (cleartext - do not use for production)"
+    description: "Development server"
 components:
   securitySchemes:
     bearerAuth:
       type: "http"
       scheme: "bearer"
       bearerFormat: "JWT"
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        avatar_url:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Comment:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          $ref: "#/components/schemas/UserStub"
+        movieId:
+          type: integer
+        content:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        parentCommentId:
+          type: string
+          nullable: true
+        likes:
+          type: array
+          items:
+            type: string
+        isDeleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserStub:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        avatar_url:
+          type: string
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [reply, notice, like]
+        message:
+          type: string
+        movieId:
+          type: integer
+          nullable: true
+        movieTitle:
+          type: string
+          nullable: true
+        commentId:
+          type: string
+          nullable: true
+        commentContent:
+          type: string
+          nullable: true
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Rating:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        movieId:
+          type: integer
+        moviePoster:
+          type: string
+        score:
+          type: number
+          minimum: 0
+          maximum: 5
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Report:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        message:
+          type: string
+        commentContent:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
 paths:
+  # ────────────── Health ──────────────
+  /:
+    get:
+      tags:
+        - Health
+      summary: "Health check"
+      security: []
+      responses:
+        "200":
+          description: "Server is running"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Flickr Backend đang chạy!"
+
   # ────────────── Auth ──────────────
   /api/auth/signup:
     post:
@@ -37,6 +184,7 @@ paths:
                   type: string
                   minLength: 3
                   maxLength: 30
+                  pattern: "^[a-zA-Z0-9_]+$"
                 password:
                   type: string
                   format: password
@@ -44,10 +192,39 @@ paths:
       responses:
         "201":
           description: "Registration successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "New user johndoe created"
         "400":
-          description: "Invalid data"
+          description: "Invalid data (validation error)"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: object
         "409":
           description: "Username already exists"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username already exists"
+        "500":
+          description: "Internal server error"
 
   /api/auth/signin:
     post:
@@ -72,7 +249,28 @@ paths:
                   format: password
       responses:
         "200":
-          description: "Login successful (returns accessToken, refreshToken, userId, avatar_url, role)"
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User johndoe logged in!"
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  userId:
+                    type: string
+                  avatar_url:
+                    type: string
+                  role:
+                    type: string
+                    enum: [user, admin]
+        "400":
+          description: "Missing credentials"
         "401":
           description: "Wrong credentials"
 
@@ -94,7 +292,14 @@ paths:
       security: []
       responses:
         "200":
-          description: "New access token"
+          description: "New access token returned"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
         "401":
           description: "Refresh token not found"
         "403":
@@ -110,7 +315,13 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          description: "Profile information"
+          description: "Profile information (user object without hashedPassword)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "500":
+          description: "Internal server error"
 
   /api/users/avatar:
     put:
@@ -129,9 +340,22 @@ paths:
                 avatar:
                   type: string
                   format: binary
+                  description: "Image file (jpeg, jpg, png, gif, webp, max 5MB)"
       responses:
         "200":
           description: "Avatar updated successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Avatar updated successfully"
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: "No image file provided"
 
   /api/users/change-username:
     put:
@@ -156,9 +380,23 @@ paths:
                   type: string
       responses:
         "200":
-          description: "Username changed successfully (returns new accessToken)"
+          description: "Username changed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username updated successfully"
+                  accessToken:
+                    type: string
+                  username:
+                    type: string
         "401":
           description: "Current password is incorrect"
+        "404":
+          description: "User not found"
         "409":
           description: "Username already exists"
 
@@ -187,12 +425,26 @@ paths:
       responses:
         "200":
           description: "Password changed successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password updated successfully"
+        "400":
+          description: "New password too short"
+        "401":
+          description: "Current password is incorrect"
+        "404":
+          description: "User not found"
 
   /api/users/{username}:
     delete:
       tags:
         - Users
-      summary: "Delete user (admin only)"
+      summary: "Delete user and all associated data (admin only)"
       security:
         - bearerAuth: []
       parameters:
@@ -203,28 +455,56 @@ paths:
             type: string
       responses:
         "200":
-          description: "User deleted successfully"
+          description: "User and associated data deleted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User johndoe and all associated data deleted successfully"
         "403":
           description: "Admin access required"
         "404":
           description: "User not found"
+        "500":
+          description: "Internal server error"
 
   # ────────────── Ratings ──────────────
   /api/ratings/movie/{movieId}:
     get:
       tags:
         - Ratings
-      summary: "Get average rating for movie (optional auth for user score)"
+      summary: "Get average rating for a movie (optional auth for user score)"
       security: []
       parameters:
         - in: path
           name: movieId
           required: true
           schema:
-            type: string
+            type: integer
+          description: "TMDB movie ID"
       responses:
         "200":
-          description: "Rating information (averageScore, totalRatings, userScore)"
+          description: "Rating information"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  averageScore:
+                    type: number
+                    example: 4.2
+                  totalRatings:
+                    type: integer
+                    example: 15
+                  userScore:
+                    type: number
+                    nullable: true
+                    example: 5
+        "500":
+          description: "Internal server error"
 
   /api/ratings:
     post:
@@ -244,18 +524,28 @@ paths:
                 - score
               properties:
                 movieId:
-                  type: string
+                  type: integer
+                  description: "TMDB movie ID"
                 score:
                   type: number
                   minimum: 1
                   maximum: 5
                 moviePoster:
                   type: string
+                  description: "URL to movie poster image"
       responses:
         "200":
-          description: "Rating upserted successfully"
+          description: "Rating upserted"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rating"
         "400":
           description: "Invalid movie ID or score"
+        "409":
+          description: "Duplicate rating entry"
+        "500":
+          description: "Internal server error"
 
   /api/ratings/batch:
     post:
@@ -275,10 +565,27 @@ paths:
                 movieIds:
                   type: array
                   items:
-                    type: string
+                    type: integer
+                  description: "Array of TMDB movie IDs"
       responses:
         "200":
-          description: "Map of movieId to average rating"
+          description: "Map of movieId to rating"
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    averageScore:
+                      type: number
+                    totalRatings:
+                      type: integer
+                example:
+                  "550": { averageScore: 4.5, totalRatings: 10 }
+                  "680": { averageScore: 3.8, totalRatings: 5 }
+        "400":
+          description: "movieIds must be a non-empty array"
 
   # ────────────── Comments ──────────────
   /api/comments:
@@ -289,11 +596,17 @@ paths:
       security: []
       responses:
         "200":
-          description: "List of comments"
+          description: "List of comments (sorted by newest first, populated with user info)"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
     post:
       tags:
         - Comments
-      summary: "Create new comment"
+      summary: "Create a new comment"
       security:
         - bearerAuth: []
       requestBody:
@@ -306,25 +619,37 @@ paths:
                 - movieId
               properties:
                 movieId:
-                  type: string
+                  type: integer
+                  description: "TMDB movie ID"
                 content:
                   type: string
                   maxLength: 500
                 imageUrl:
                   type: string
+                  format: uri
                 parentCommentId:
                   type: string
+                  description: "MongoDB ObjectId of parent comment (for replies)"
                 movieTitle:
                   type: string
+                  description: "Movie title for notification"
       responses:
         "201":
-          description: "Comment created successfully"
+          description: "Comment created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: "Validation error (invalid movieId, content, imageUrl)"
+        "404":
+          description: "Parent comment not found"
 
   /api/comments/upload-image:
     post:
       tags:
         - Comments
-      summary: "Upload image for comment"
+      summary: "Upload an image for a comment"
       security:
         - bearerAuth: []
       requestBody:
@@ -337,11 +662,22 @@ paths:
                 commentImage:
                   type: string
                   format: binary
+                  description: "Image file (jpeg, jpg, png, gif, webp, max 5MB)"
       responses:
         "200":
-          description: "Image uploaded successfully (returns imageUrl)"
+          description: "Image uploaded"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    example: "https://example.com/uploads/comments/comment-123456789.jpg"
+        "400":
+          description: "No image file provided"
 
-  /api/comments/{movieId}:
+  /api/comments/{id}:
     get:
       tags:
         - Comments
@@ -349,19 +685,24 @@ paths:
       security: []
       parameters:
         - in: path
-          name: movieId
+          name: id
           required: true
           schema:
-            type: string
+            type: integer
+          description: "TMDB movie ID"
       responses:
         "200":
-          description: "Movie comments list"
-
-  /api/comments/{id}:
+          description: "Movie comments list (sorted by newest first, populated with user info)"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
     delete:
       tags:
         - Comments
-      summary: "Delete comment (soft delete)"
+      summary: "Soft-delete a comment (owner only)"
       security:
         - bearerAuth: []
       parameters:
@@ -370,17 +711,26 @@ paths:
           required: true
           schema:
             type: string
+          description: "MongoDB ObjectId of the comment"
       responses:
         "200":
-          description: "Comment deleted successfully"
+          description: "Comment soft-deleted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comment deleted successfully"
         "404":
-          description: "Comment not found"
+          description: "Comment not found or unauthorized"
 
   /api/comments/{id}/like:
     post:
       tags:
         - Comments
-      summary: "Like/unlike comment"
+      summary: "Toggle like/unlike on a comment"
       security:
         - bearerAuth: []
       parameters:
@@ -389,6 +739,7 @@ paths:
           required: true
           schema:
             type: string
+          description: "MongoDB ObjectId of the comment"
       requestBody:
         content:
           application/json:
@@ -396,19 +747,49 @@ paths:
               type: object
               properties:
                 movieId:
-                  type: string
+                  type: integer
+                  description: "TMDB movie ID (for notification)"
                 movieTitle:
                   type: string
+                  description: "Movie title (for notification)"
       responses:
         "200":
-          description: "Like toggled successfully"
+          description: "Toggled — returns updated comment"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "404":
+          description: "Comment not found"
 
   # ────────────── Reports ──────────────
   /api/reports:
+    get:
+      tags:
+        - Reports
+      summary: "Get all reports (admin only)"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "List of reports (sorted by newest first)"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Report"
+        "403":
+          description: "Admin access required"
     post:
       tags:
         - Reports
-      summary: "Create new report"
+      summary: "Create a new report"
       security:
         - bearerAuth: []
       requestBody:
@@ -426,28 +807,30 @@ paths:
                   description: "Username of the reported user"
                 message:
                   type: string
+                  description: "Reason for the report"
                 commentContent:
                   type: string
+                  description: "Offending comment content"
       responses:
         "201":
-          description: "Report created successfully"
-    get:
-      tags:
-        - Reports
-      summary: "Get all reports (admin only)"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "List of reports"
-        "403":
-          description: "No admin permission"
+          description: "Report created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Report"
+        "400":
+          description: "Username and message are required"
 
   /api/reports/notice:
     post:
       tags:
         - Reports
-      summary: "Send notice to violating user (admin only)"
+      summary: "Send a violation notice to a user (admin only)"
       security:
         - bearerAuth: []
       requestBody:
@@ -465,7 +848,17 @@ paths:
                   type: string
       responses:
         "200":
-          description: "Notice sent successfully"
+          description: "Notice sent"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Notice sent to user"
         "400":
           description: "Username is required"
         "404":
@@ -475,7 +868,7 @@ paths:
     delete:
       tags:
         - Reports
-      summary: "Delete report (admin only)"
+      summary: "Delete a report (admin only)"
       security:
         - bearerAuth: []
       parameters:
@@ -484,9 +877,20 @@ paths:
           required: true
           schema:
             type: string
+          description: "MongoDB ObjectId of the report"
       responses:
         "200":
-          description: "Report deleted successfully"
+          description: "Report deleted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Report deleted successfully"
         "404":
           description: "Report not found"
 
@@ -500,7 +904,20 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          description: "List of notifications with unreadCount"
+          description: "List of notifications with unread count"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+                  unreadCount:
+                    type: integer
 
   /api/notifications/unread-count:
     get:
@@ -512,6 +929,15 @@ paths:
       responses:
         "200":
           description: "Unread count"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  unreadCount:
+                    type: integer
 
   /api/notifications/read-all:
     patch:
@@ -523,12 +949,22 @@ paths:
       responses:
         "200":
           description: "Marked successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "All notifications marked as read"
 
   /api/notifications/{id}/read:
     patch:
       tags:
         - Notifications
-      summary: "Mark notification as read"
+      summary: "Mark a single notification as read"
       security:
         - bearerAuth: []
       parameters:
@@ -537,9 +973,20 @@ paths:
           required: true
           schema:
             type: string
+          description: "MongoDB ObjectId of the notification"
       responses:
         "200":
-          description: "Marked successfully"
+          description: "Marked as read"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Notification marked as read"
         "404":
           description: "Notification not found"
 
@@ -547,7 +994,7 @@ paths:
     delete:
       tags:
         - Notifications
-      summary: "Delete notification"
+      summary: "Delete a notification"
       security:
         - bearerAuth: []
       parameters:
@@ -556,8 +1003,55 @@ paths:
           required: true
           schema:
             type: string
+          description: "MongoDB ObjectId of the notification"
       responses:
         "200":
           description: "Notification deleted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Notification deleted"
         "404":
           description: "Notification not found"
+
+  # ────────────── TMDB Proxy ──────────────
+  /api/tmdb/{path}:
+    parameters:
+      - in: path
+        name: path
+        required: true
+        schema:
+          type: string
+        description: "TMDB API path (e.g. /movie/popular, /search/movie)"
+      - in: query
+        name: query
+        required: false
+        schema:
+          type: string
+        description: "Query parameters forwarded to TMDB"
+    get:
+      tags:
+        - TMDB Proxy
+      summary: "Proxy GET request to TMDB API"
+      security: []
+      responses:
+        "200":
+          description: "TMDB API response passed through"
+        "502":
+          description: "TMDB proxy error"
+    post:
+      tags:
+        - TMDB Proxy
+      summary: "Proxy POST request to TMDB API"
+      security: []
+      responses:
+        "200":
+          description: "TMDB API response passed through"
+        "502":
+          description: "TMDB proxy error"

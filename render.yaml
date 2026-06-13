@@ -19,3 +19,5 @@ services:
         value: "*"
       - key: PORT
         value: 8080
+      - key: TMDB_ACCESS_TOKEN
+        sync: false

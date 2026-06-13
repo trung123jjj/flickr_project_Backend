@@ -140,6 +140,7 @@ app.use("/api/users", require("./routes/user"));
 app.use("/api/comments", require("./routes/comment"));
 app.use("/api/reports", require("./routes/report"));
 app.use("/api/notifications", require("./routes/notification"));
+app.use("/api/tmdb", require("./routes/tmdb"));
 
 // 🔥 Test route
 app.get("/", (req, res) => {

@@ -96,16 +96,17 @@ flickr_project_Backend/
 | PUT | `/avatar` | Update avatar (multipart) |
 | PUT | `/change-username` | Change username |
 | PUT | `/change-password` | Change password |
-| DELETE | `/delete/:username` | Delete user (admin) |
+| DELETE | `/:username` | Delete user + all data (admin) |
 
 ### Comments (`/api/comments`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/` | Get all comments |
 | GET | `/:movieId` | Get comments for a movie |
 | POST | `/` | Create a comment |
 | POST | `/upload-image` | Upload a comment image |
-| DELETE | `/:commentId` | Delete a comment |
-| POST | `/:commentId/like` | Toggle like on a comment |
+| DELETE | `/:id` | Soft-delete a comment (owner) |
+| POST | `/:id/like` | Toggle like on a comment |
 
 ### Ratings (`/api/ratings`)
 | Method | Endpoint | Description |
@@ -130,6 +131,16 @@ flickr_project_Backend/
 | PATCH | `/read-all` | Mark all as read |
 | PATCH | `/:id/read` | Mark one as read |
 | DELETE | `/:id` | Delete a notification |
+
+### TMDB Proxy (`/api/tmdb`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| ANY | `/*` | Proxy requests to TMDB API v3 |
+
+### Health
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Health check |
 
 ---
 

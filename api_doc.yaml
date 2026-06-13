@@ -440,6 +440,53 @@ paths:
         "404":
           description: "User not found"
 
+  /api/users/avatar-data/{userId}:
+    get:
+      tags:
+        - Users
+      summary: "Get raw avatar image by user ID"
+      security: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: "MongoDB ObjectId of the user"
+      responses:
+        "200":
+          description: "Raw avatar image (fallback redirect to default if none)"
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "302":
+          description: "Redirect to default avatar if user or avatar_data not found"
+
+  /api/users/fix-avatars:
+    post:
+      tags:
+        - Users
+      summary: "Check and reset broken avatar URLs to default (admin only)"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Broken avatars fixed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Fixed 3 broken avatars"
+                  fixed:
+                    type: integer
+        "403":
+          description: "Admin access required"
+
   /api/users/{username}:
     delete:
       tags:
@@ -677,7 +724,7 @@ paths:
         "400":
           description: "No image file provided"
 
-  /api/comments/{id}:
+  /api/comments/{movieId}:
     get:
       tags:
         - Comments
@@ -685,7 +732,7 @@ paths:
       security: []
       parameters:
         - in: path
-          name: id
+          name: movieId
           required: true
           schema:
             type: integer
@@ -699,6 +746,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Comment"
+
+  /api/comments/{id}:
     delete:
       tags:
         - Comments
